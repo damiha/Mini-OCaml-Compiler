@@ -1,3 +1,7 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
 public abstract class Expr {
 
     abstract <T> T accept(Visitor<T> visitor, GenerationMode mode);
@@ -71,7 +75,21 @@ public abstract class Expr {
         }
     }
 
+    // this returns a function as a value (functions as variables you can pass around)
+
     static class FunctionDefinition extends Expr{
+
+        String functionName;
+
+        List<Variable> variables;
+
+        Expr rightHandSide;
+
+        public FunctionDefinition(String functionName, List<Variable> variables, Expr rightHandSide){
+            this.functionName = functionName;
+            this.variables = new ArrayList<>(variables);
+            this.rightHandSide = rightHandSide;
+        }
 
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {

@@ -55,6 +55,76 @@ public class Instr {
         }
     }
 
+    static class MakeVec extends Instr{
+
+        int g;
+
+        public MakeVec(int g){
+            this.g = g;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("MakeVec %d", g);
+        }
+    }
+
+    // creates a functional value
+    static class MakeFunVal extends Instr{
+
+        String jumpLabel;
+
+        public MakeFunVal(String jumpLabel){
+            this.jumpLabel = jumpLabel;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("MakeFunVal %s", jumpLabel);
+        }
+    }
+
+    static class Jump extends Instr {
+        String jumpLabel;
+
+        public Jump(String jumpLabel){
+            this.jumpLabel = jumpLabel;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("Jump %s", jumpLabel);
+        }
+    }
+
+    static class TestArg extends Instr{
+
+        int k;
+
+        public TestArg(int k){
+            this.k = k;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("TestArg %d", k);
+        }
+    }
+
+    static class Return extends Instr {
+
+        int k;
+
+        public Return(int k){
+            this.k = k;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("Return %d", k);
+        }
+    }
+
     static class Add extends Instr {
 
         @Override

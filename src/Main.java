@@ -1,3 +1,5 @@
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) {
 
@@ -16,11 +18,9 @@ public class Main {
 
         Expr expr = new Expr.Let(
                 new Expr.Variable("a"),
-                new Expr.IntLiteral(19),
-                new Expr.Let(new Expr.Variable("b"),
-                        new Expr.BinOp(new Expr.Variable("a"), BinaryOperator.MUL, new Expr.Variable("a")),
-                        new Expr.BinOp(new Expr.Variable("a"), BinaryOperator.PLUS, new Expr.Variable("b"))
-                        )
+                new Expr.IntLiteral(1),
+                new Expr.FunctionDefinition("f", List.of(new Expr.Variable("b")),
+                        new Expr.BinOp(new Expr.Variable("a"), BinaryOperator.PLUS, new Expr.Variable("b")))
         );
 
         Compiler compiler = new Compiler();

@@ -1,3 +1,7 @@
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class Compiler implements Expr.Visitor<Code>{
 
     // important to keep track of everything?
@@ -142,7 +146,74 @@ public class Compiler implements Expr.Visitor<Code>{
 
     @Override
     public Code visitFunctionDefinition(Expr.FunctionDefinition functionDefinition, GenerationMode mode) {
-        return null;
+
+        Code code = new Code();
+
+        // first, gather all free variables (not function parameters, not locals)
+        // and wrap them in a global vector
+        Set<Expr.Variable> freeVariables = free(functionDefinition.rightHandSide);
+
+        for(Expr.Variable var : freeVariables){
+            code.addCode(codeV(var));
+        }
+
+        int g = freeVariables.size();
+        code.addInstruction(new Instr.MakeVec(g), stackDistance);
+
+        String jumpToFunction = code.getNewJumpLabel();
+        String jumpOverFunction = code.getNewJumpLabel();
+
+        code.addInstruction(new Instr.MakeFunVal(jumpToFunction), stackDistance);
+        code.addInstruction(new Instr.Jump(jumpOverFunction), stackDistance);
+
+        // now the code for the function
+
+        // are exactly all k values the function needs present or is it over or under supplied
+        int k = functionDefinition.variables.size();
+
+        int previousStackDistance = stackDistance;
+        stackDistance = 0;
+
+        code.addInstruction(new Instr.TestArg(k), jumpToFunction, stackDistance);
+        code.addCode(codeV(functionDefinition.rightHandSide));
+        code.addInstruction(new Instr.Return(k), stackDistance);
+
+        // now the code after the function
+
+        // outside function again so old stack distance has to be restored
+        stackDistance = previousStackDistance;
+
+        // for future code (we don't know yet what comes here)
+        code.setJumpLabelAtEnd(jumpOverFunction);
+
+        return code;
+    }
+
+    private Set<Expr.Variable> free(Expr expr){
+
+        Environment previous = environment;
+        environment = environment.deepCopy();
+
+        Set<Expr.Variable> freeVariables = free(expr, environment);
+
+        // restore old environment
+        environment = previous;
+
+        return freeVariables;
+    }
+
+    private Set<Expr.Variable> free(Expr expr, Environment surroundingEnvironment){
+
+        Set<Expr.Variable> freeVars = new HashSet<>();
+
+        // TODO: CONTINUE HERE
+        if(expr instanceof Expr.Variable){
+            if(!surroundingEnvironment.env.containsKey(((Expr.Variable) expr).varName)){
+                freeVars.add((Expr.Variable) expr);
+            }
+        }
+
+        return freeVars;
     }
 
     @Override
