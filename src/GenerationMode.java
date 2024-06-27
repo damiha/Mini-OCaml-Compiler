@@ -4,6 +4,6 @@ public enum GenerationMode {
     B,
     // V puts addresses (into the heap) on the stack (Call-by-Value)
     V,
-    // C puts addresses to closures (that lie in the heap) on the stack (Call-by-Need)
-    C
+
+    // we don't implement the closure stuff
 }

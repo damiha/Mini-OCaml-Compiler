@@ -1,6 +1,32 @@
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Hello world!");
+        /*
+        Expr expr = new Expr.IntLiteral(19);
+         */
+
+        // test global vars
+        /*
+        Compiler compiler = new Compiler();
+
+        compiler.environment.insert("x", Visibility.G, 1);
+
+        Expr expr = new Expr.Variable("x");
+         */
+
+        Expr expr = new Expr.Let(
+                new Expr.Variable("a"),
+                new Expr.IntLiteral(19),
+                new Expr.Let(new Expr.Variable("b"),
+                        new Expr.BinOp(new Expr.Variable("a"), BinaryOperator.MUL, new Expr.Variable("a")),
+                        new Expr.BinOp(new Expr.Variable("a"), BinaryOperator.PLUS, new Expr.Variable("b"))
+                        )
+        );
+
+        Compiler compiler = new Compiler();
+
+        Code code = compiler.codeV(expr);
+
+        System.out.println(code);
     }
 }

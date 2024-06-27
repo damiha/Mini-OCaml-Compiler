@@ -8,4 +8,16 @@ public class Heap {
     public Heap(){
         data = new ArrayList<>();
     }
+
+    public HeapElement get(int i){
+        return data.get(i);
+    }
+
+    public int insert(HeapElement heapElement){
+        int heapAddress = data.size();
+
+        data.add(heapElement);
+
+        return heapAddress;
+    }
 }

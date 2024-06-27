@@ -1,18 +1,27 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class HeapElement {
-
-    HeapTag heapTag;
-
-    public HeapElement(HeapTag tag){
-        this.heapTag = tag;
-    }
 
     static class BasicValue extends HeapElement{
 
         int value;
 
-        public BasicValue(HeapTag tag, int value) {
-            super(tag);
+        public BasicValue(int value) {
             this.value = value;
+        }
+    }
+
+    static class Vector extends HeapElement{
+
+        List<Integer> values;
+
+        public Vector(){
+            values = new ArrayList<>();
+        }
+
+        public int get(int address){
+            return values.get(address);
         }
     }
 }
