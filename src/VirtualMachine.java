@@ -8,6 +8,10 @@ public class VirtualMachine {
     int[] stack;
     Instr[] code;
 
+    // for debugging purposes (so we always no which element should be
+    // read as a value and which one should be read as an address
+    StackType[] stackTypes;
+
     int maxStackSize = 1000;
     int maxCodeSize = 1000;
 
@@ -15,8 +19,15 @@ public class VirtualMachine {
 
     boolean isRunning;
 
+    boolean printDebug = true;
+
+    boolean showHeapContent = true;
+
+    Instr instructionRegister;
+
     public VirtualMachine(){
         stack = new int[maxStackSize];
+        stackTypes = new StackType[maxStackSize];
         code = new Instr[maxCodeSize];
 
         heap = new Heap();
@@ -30,6 +41,7 @@ public class VirtualMachine {
             this.code[i] = code.instructions.get(i);
         }
 
+        instructionRegister = null;
         programCounter = 0;
         stackPointer = 0;
         globalPointer = heap.insert(new HeapElement.Vector());
@@ -50,7 +62,13 @@ public class VirtualMachine {
         loadCode(code);
 
         while(isRunning){
+
             Instr instruction = this.code[programCounter++];
+            instructionRegister = instruction;
+
+            if(printDebug){
+                System.out.println(this);
+            }
 
             if(instruction instanceof Instr.Halt){
                 isRunning = false;
@@ -85,8 +103,40 @@ public class VirtualMachine {
                 int addressInGlobalVector = ((Instr.PushGlob) instruction).addressInGlobalVector;
                 stack[++stackPointer] = getValueInGlobalVector(addressInGlobalVector);
             }
+
         }
 
         return -1;
+    }
+
+    private String showRegisters(){
+
+        String programCounterString = String.format("%d (%s)", programCounter, instructionRegister == null ? "null" : instructionRegister.toString());
+        return String.format("PC: %s", programCounterString);
+    }
+
+    private String showStackContent(){
+        return "";
+    }
+
+    private String showHeapContent(){
+
+        if(!showHeapContent){
+            return "???";
+        }
+        return heap.toString();
+    }
+
+    // important for debugging
+    public String toString(){
+        return String.format(
+                """
+                REGISTERS:
+                %s
+                STACK:
+                %s
+                HEAP:
+                %s
+                ---""", showRegisters(), showStackContent(), showHeapContent());
     }
 }

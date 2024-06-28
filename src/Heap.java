@@ -20,4 +20,14 @@ public class Heap {
 
         return heapAddress;
     }
+
+    public String toString(){
+
+        StringBuilder res = new StringBuilder();
+
+        for(int i = 0; i < data.size(); i++){
+            res.append(String.format("%d %s\n", i, data.get(i)));
+        }
+        return res.toString();
+    }
 }
