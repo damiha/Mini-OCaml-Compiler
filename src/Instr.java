@@ -69,6 +69,19 @@ public class Instr {
         }
     }
 
+    static class Get extends Instr{
+        int j;
+
+        public Get(int j){
+            this.j = j;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("Get %d", j);
+        }
+    }
+
     // creates a functional value
     static class MakeFunVal extends Instr{
 
@@ -190,6 +203,14 @@ public class Instr {
         @Override
         public String toString(){
             return "Add";
+        }
+    }
+
+    static class Sub extends Instr {
+
+        @Override
+        public String toString(){
+            return "Sub";
         }
     }
 

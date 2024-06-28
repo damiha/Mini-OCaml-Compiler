@@ -53,6 +53,42 @@ public class Compiler implements Expr.Visitor<Code>{
         return code;
     }
 
+    @Override
+    public Code visitTuple(Expr.Tuple tuple, GenerationMode mode) {
+
+        Code code = new Code();
+
+        // even if we have nested tuples, the stack only increases by one per tuple element
+        // because a tuple element is just a pointer to the heap?
+        int k = tuple.expressions.size();
+
+        for(Expr expr : tuple.expressions){
+            code.addCode(codeV(expr));
+        }
+
+        addMakeVec(code, k);
+
+        return code;
+    }
+
+    @Override
+    public Code visitTupleAccess(Expr.TupleAccess tupleAccess, GenerationMode mode) {
+
+        Code code = codeV(tupleAccess.expr);
+
+        code.addInstruction(new Instr.Get(tupleAccess.j), stackDistance);
+
+        return code;
+    }
+
+    private void addMakeVec(Code code, int k){
+        code.addInstruction(new Instr.MakeVec(k), stackDistance);
+
+        // make vec consumes all the k arguments (so -k) and adds one address (the one to the global vector) + 1
+        // on the stack
+        stackDistance = stackDistance - k + 1;
+    }
+
     private Code getVar(Expr.Variable variable){
         Code code = new Code();
 
@@ -89,7 +125,7 @@ public class Compiler implements Expr.Visitor<Code>{
             letCounter += 1;
 
             // we insert after the codeV because only when the right hand side exists, the variable is defined
-            environment.insert(((Expr.Let) current).target.varName, Visibility.L, stackDistance);
+            environment.insert(((Expr.Let) current).target, Visibility.L, stackDistance, Index.INCREASING);
 
             current = ((Expr.Let) current).inExpr;
 
@@ -99,11 +135,16 @@ public class Compiler implements Expr.Visitor<Code>{
         code.addCode(codeV(current));
 
         // slide n to destroy all variables in the context
-        code.addInstruction(new Instr.Slide(letCounter), stackDistance);
+        addSlide(code, letCounter);
 
         environment = previous;
 
         return code;
+    }
+
+    private void addSlide(Code code, int n){
+        code.addInstruction(new Instr.Slide(n), stackDistance);
+        stackDistance -= n;
     }
 
     @Override
@@ -122,14 +163,12 @@ public class Compiler implements Expr.Visitor<Code>{
 
         // since everything is defined 'in parallel', all variables
         // are available at once
-        int i = 1;
-        for(Pair<Expr.Variable, Expr> p : letRec.parallelDefs){
-            environment.insert(p.first().varName, Visibility.L, prevStackDistance + i);
-        }
+
+        environment.insertParallelDefs(letRec.parallelDefs, Visibility.L, prevStackDistance + 1, Index.INCREASING);
 
         // let evaluates from left to right
-        i = 0;
-        for(Pair<Expr.Variable, Expr> p : letRec.parallelDefs){
+        int i = 0;
+        for(Pair<Expr, Expr> p : letRec.parallelDefs){
 
             stackDistance = prevStackDistance + n;
 
@@ -142,7 +181,7 @@ public class Compiler implements Expr.Visitor<Code>{
         code.addCode(codeV(letRec.inExpr));
 
         // we don't need the prev stack distance stuff
-        code.addInstruction(new Instr.Slide(n), stackDistance);
+        addSlide(code, n);
 
         environment = previous;
 
@@ -171,6 +210,12 @@ public class Compiler implements Expr.Visitor<Code>{
             case BinaryOperator.MUL:
                 code.addInstruction(new Instr.Mul(), stackDistance);
                 break;
+            case BinaryOperator.LEQ:
+                code.addInstruction(new Instr.LessThanOrEqual(), stackDistance);
+                break;
+            case BinaryOperator.MINUS:
+                code.addInstruction(new Instr.Sub(), stackDistance);
+                break;
         }
 
         // one operator is consumed
@@ -196,30 +241,25 @@ public class Compiler implements Expr.Visitor<Code>{
         Environment previous = environment;
         Environment functionEnvironment = new Environment();
 
-        int i = 0;
-        for(Expr.Variable variable : functionDefinition.variables){
-            functionEnvironment.insert(variable.varName, Visibility.L, -i);
-            i++;
-        }
+        functionEnvironment.insert(functionDefinition.variables, Visibility.L, 0, Index.DECREASING);
 
-        Set<Expr.Variable> freeVariables = free(functionDefinition.rightHandSide, functionEnvironment);
+        Set<Expr> freeVariables = free(functionDefinition.rightHandSide, functionEnvironment);
 
         int globVars = 0;
-        for(Expr.Variable var : freeVariables){
 
-            functionEnvironment.insert(var.varName, Visibility.G, globVars++);
+        functionEnvironment.insert(freeVariables, Visibility.G, 0, Index.INCREASING);
+
+        for(Expr var : freeVariables){
+
+            //functionEnvironment.insert(var.varName, Visibility.G, globVars++);
 
             // with respect to the calling scope
-            code.addCode(getVar(var));
+            code.addCode(getVar((Expr.Variable) var));
         }
 
         int g = freeVariables.size();
 
-        code.addInstruction(new Instr.MakeVec(g), stackDistance);
-
-        // make vec consumes all the g arguments (so -g) and adds one address (the one to the global vector)
-        // on the stack
-        stackDistance = stackDistance - g + 1;
+        addMakeVec(code, g);
 
         String jumpToFunction = code.getNewJumpLabel();
         String jumpOverFunction = code.getNewJumpLabel();
@@ -257,12 +297,12 @@ public class Compiler implements Expr.Visitor<Code>{
         return code;
     }
 
-    private Set<Expr.Variable> free(Expr expr){
+    private Set<Expr> free(Expr expr){
 
         Environment previous = environment;
         environment = environment.deepCopy();
 
-        Set<Expr.Variable> freeVariables = free(expr, environment);
+        Set<Expr> freeVariables = free(expr, environment);
 
         // restore old environment
         environment = previous;
@@ -270,13 +310,13 @@ public class Compiler implements Expr.Visitor<Code>{
         return freeVariables;
     }
 
-    private Set<Expr.Variable> free(Expr expr, Environment surroundingEnvironment){
+    private Set<Expr> free(Expr expr, Environment surroundingEnvironment){
 
-        Set<Expr.Variable> freeVars = new HashSet<>();
+        Set<Expr> freeVars = new HashSet<>();
 
         if(expr instanceof Expr.Variable){
             if(!surroundingEnvironment.env.containsKey(((Expr.Variable) expr).varName)){
-                freeVars.add((Expr.Variable) expr);
+                freeVars.add(expr);
             }
         }
         else if(expr instanceof Expr.UnOp){
@@ -284,8 +324,8 @@ public class Compiler implements Expr.Visitor<Code>{
         }
         else if(expr instanceof Expr.BinOp){
 
-            Set<Expr.Variable> freeVarsLeft = free(((Expr.BinOp) expr).left, surroundingEnvironment);
-            Set<Expr.Variable> freeVarsRight = free(((Expr.BinOp) expr).right, surroundingEnvironment);
+            Set<Expr> freeVarsLeft = free(((Expr.BinOp) expr).left, surroundingEnvironment);
+            Set<Expr> freeVarsRight = free(((Expr.BinOp) expr).right, surroundingEnvironment);
             freeVarsLeft.addAll(freeVarsRight);
 
             return freeVarsLeft;
@@ -294,9 +334,9 @@ public class Compiler implements Expr.Visitor<Code>{
 
             // there cannot be a variable definition in the condition of an if
             // don't allow: if (let a = 5) >= 1 then ...
-            Set<Expr.Variable> freeVarsCond = free(((Expr.If) expr).condition, surroundingEnvironment);
-            Set<Expr.Variable> freeVarsIf = free(((Expr.If) expr).ifBranchExpr, surroundingEnvironment);
-            Set<Expr.Variable> freeVarsElse = free(((Expr.If) expr).elseBranchExpr, surroundingEnvironment);
+            Set<Expr> freeVarsCond = free(((Expr.If) expr).condition, surroundingEnvironment);
+            Set<Expr> freeVarsIf = free(((Expr.If) expr).ifBranchExpr, surroundingEnvironment);
+            Set<Expr> freeVarsElse = free(((Expr.If) expr).elseBranchExpr, surroundingEnvironment);
 
             freeVars.addAll(freeVarsCond);
             freeVars.addAll(freeVarsIf);
@@ -306,22 +346,19 @@ public class Compiler implements Expr.Visitor<Code>{
             // the parameters are now defined, at least they are not free anymore
             Environment newSurrounding = surroundingEnvironment.deepCopy();
 
-            for(Expr.Variable var : ((Expr.FunctionDefinition) expr).variables){
-                // the address is not really important for this 'free' check
-                newSurrounding.insert(var.varName, Visibility.L, 0);
-            }
+            newSurrounding.insert(expr, Visibility.L, 0, Index.INCREASING);
 
             return free(((Expr.FunctionDefinition) expr).rightHandSide, newSurrounding);
         }
         else if(expr instanceof Expr.Let){
            Environment newSurrounding = surroundingEnvironment.deepCopy();
 
-           newSurrounding.insert(((Expr.Let) expr).target.varName, Visibility.L, 0);
+           newSurrounding.insert(expr, Visibility.L, 0, Index.INCREASING);
 
            return free(((Expr.Let) expr).inExpr, newSurrounding);
         }
         else if(expr instanceof Expr.FunctionApplication){
-            Set<Expr.Variable> freeFunction = free(((Expr.FunctionApplication) expr).functionExpr, surroundingEnvironment);
+            Set<Expr> freeFunction = free(((Expr.FunctionApplication) expr).functionExpr, surroundingEnvironment);
             freeVars.addAll(freeFunction);
 
             for(Expr argumentExpr : ((Expr.FunctionApplication) expr).exprArguments){
@@ -342,6 +379,8 @@ public class Compiler implements Expr.Visitor<Code>{
 
         code.addInstruction(new Instr.Mark(continueAfterFunctionCall), stackDistance);
 
+        int prevStackDistance = stackDistance;
+
         // reserve three spots for the organizational cells
         stackDistance += 3;
 
@@ -353,6 +392,9 @@ public class Compiler implements Expr.Visitor<Code>{
         code.addCode(codeV(functionApplication.functionExpr));
 
         code.addInstruction(new Instr.Apply(), stackDistance);
+
+        // old stack distance + 1 for the return value
+        stackDistance = prevStackDistance + 1;
 
         code.setJumpLabelAtEnd(continueAfterFunctionCall);
 

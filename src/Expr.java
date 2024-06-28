@@ -102,15 +102,46 @@ public abstract class Expr {
         }
     }
 
+    static class Tuple extends Expr{
+
+        List<Expr> expressions;
+
+        public Tuple(List<Expr> expressions){
+            this.expressions = new ArrayList<>(expressions);
+        }
+
+        @Override
+        <T> T accept(Visitor<T> visitor, GenerationMode mode) {
+            return visitor.visitTuple(this, mode);
+        }
+    }
+
+    static class TupleAccess extends Expr{
+        Expr expr;
+
+        // index
+        int j;
+
+        public TupleAccess(Expr expr, int j){
+            this.expr = expr;
+            this.j = j;
+        }
+
+        @Override
+        <T> T accept(Visitor<T> visitor, GenerationMode mode) {
+            return visitor.visitTupleAccess(this, mode);
+        }
+    }
+
     // this returns a function as a value (functions as variables you can pass around)
 
     static class FunctionDefinition extends Expr{
 
-        List<Variable> variables;
+        List<Expr> variables;
 
         Expr rightHandSide;
 
-        public FunctionDefinition(List<Variable> variables, Expr rightHandSide){
+        public FunctionDefinition(List<Expr> variables, Expr rightHandSide){
             this.variables = new ArrayList<>(variables);
             this.rightHandSide = rightHandSide;
         }
@@ -124,14 +155,14 @@ public abstract class Expr {
     static class Let extends Expr{
 
         // let x_1 = e_1 in e_0
-        // x_1 is the target
+        // x_1 is the target (can also be a tuple of variables)
         // e_1 is the right hand side
         // e_0 is the inExpr
-        Variable target;
+        Expr target;
         Expr rightHandSide;
         Expr inExpr;
 
-        public Let(Variable target, Expr rightHandSide, Expr inExpr){
+        public Let(Expr target, Expr rightHandSide, Expr inExpr){
             this.target = target;
             this.rightHandSide = rightHandSide;
             this.inExpr = inExpr;
@@ -145,10 +176,10 @@ public abstract class Expr {
 
     static class LetRec extends Expr{
 
-        List<Pair<Variable, Expr>> parallelDefs;
+        List<Pair<Expr, Expr>> parallelDefs;
         Expr inExpr;
 
-        public LetRec(List<Pair<Variable, Expr>> parallelDefs, Expr inExpr){
+        public LetRec(List<Pair<Expr, Expr>> parallelDefs, Expr inExpr){
             this.parallelDefs = new ArrayList<>(parallelDefs);
             this.inExpr = inExpr;
         }
@@ -169,5 +200,7 @@ public abstract class Expr {
         T visitUnOp(UnOp unOp, GenerationMode mode);
         T visitIntLiteral(IntLiteral intLiteral, GenerationMode mode);
         T visitVariable(Variable variable, GenerationMode mode);
+        T visitTuple(Tuple tuple, GenerationMode mode);
+        T visitTupleAccess(TupleAccess tupleAccess, GenerationMode mode);
     }
 }
