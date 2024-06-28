@@ -10,13 +10,14 @@ public enum TokenType {
     LESS, LESS_EQUAL,
     ARROW,
     DOUBLE_AMPERSAND, DOUBLE_PIPE,
+    PERCENT,
 
     // Literals.
     IDENTIFIER, NUMBER,
 
     // Keywords.
     IF, THEN, ELSE,
-    LET, IN, REC, FUN,
+    LET, IN, REC, FUN, AND,  // used for let rec y_1 = e_1 and ...
 
     EOF
 }

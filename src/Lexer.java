@@ -27,6 +27,7 @@ public class Lexer {
         keywordToToken.put("in", TokenType.IN);
         keywordToToken.put("rec", TokenType.REC);
         keywordToToken.put("fun", TokenType.FUN);
+        keywordToToken.put("and", TokenType.AND);
     }
 
     public List<Token> getTokens(){
@@ -87,6 +88,9 @@ public class Lexer {
                     break;
                 case ',':
                     addToken(TokenType.COMMA);
+                    break;
+                case '%':
+                    addToken(TokenType.PERCENT);
                     break;
                 case '!':
                     if(match('=')){

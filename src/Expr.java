@@ -6,6 +6,8 @@ public abstract class Expr {
 
     abstract <T> T accept(Visitor<T> visitor, GenerationMode mode);
 
+    public abstract boolean equals(Object other);
+
     static class IntLiteral extends Expr{
 
         int value;
@@ -17,6 +19,11 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitIntLiteral(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof IntLiteral) && (((IntLiteral) other).value == value);
         }
     }
 
@@ -31,6 +38,11 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitVariable(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof Variable && ((Variable) other).varName.equals(varName));
         }
     }
 
@@ -48,6 +60,11 @@ public abstract class Expr {
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitUnOp(this, mode);
         }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof UnOp) && (((UnOp) other).operator == operator) && (((UnOp) other).expr.equals(expr));
+        }
     }
 
     static class BinOp extends Expr{
@@ -64,6 +81,12 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitBinOp(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof BinOp) && (((BinOp) other).operator == operator) &&
+                    (((BinOp) other).left.equals(left)) && (((BinOp) other).right.equals(right));
         }
     }
 
@@ -83,6 +106,13 @@ public abstract class Expr {
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitIf(this, mode);
         }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof If) && (((If) other).condition.equals(condition)) &&
+                    ((If) other).ifBranchExpr.equals(ifBranchExpr) &&
+                    ((If) other).elseBranchExpr.equals(elseBranchExpr);
+        }
     }
 
     static class FunctionApplication extends Expr{
@@ -100,6 +130,32 @@ public abstract class Expr {
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitFunctionApplication(this, mode);
         }
+
+        @Override
+        public boolean equals(Object other) {
+            if(!(other instanceof FunctionApplication)){
+                return false;
+            }
+
+            // number of arguments must match
+            if(((FunctionApplication) other).exprArguments.size() != exprArguments.size()){
+                return false;
+            }
+
+            if(!functionExpr.equals(((FunctionApplication) other).functionExpr)){
+                return false;
+            }
+
+            // check that all arguments match
+            int i = 0;
+            for(Expr otherArg : ((FunctionApplication) other).exprArguments){
+                if(!exprArguments.get(i).equals(otherArg)){
+                    return false;
+                }
+                i++;
+            }
+            return true;
+        }
     }
 
     static class Tuple extends Expr{
@@ -113,6 +169,29 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitTuple(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if(!(other instanceof Tuple)){
+                return false;
+            }
+
+
+            // number of arguments must match
+            if(((Tuple) other).expressions.size() != expressions.size()){
+                return false;
+            }
+
+            // check that all arguments match
+            int i = 0;
+            for(Expr otherArg : ((Tuple) other).expressions){
+                if(!expressions.get(i).equals(otherArg)){
+                    return false;
+                }
+                i++;
+            }
+            return true;
         }
     }
 
@@ -130,6 +209,13 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitTupleAccess(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof TupleAccess) &&
+                    ((TupleAccess) other).expr.equals(expr) &&
+                    (((TupleAccess) other).j) == j;
         }
     }
 
@@ -149,6 +235,32 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitFunctionDefinition(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if(!(other instanceof FunctionDefinition)){
+                return false;
+            }
+
+            // number of arguments must match
+            if(((FunctionDefinition) other).variables.size() != variables.size()){
+                return false;
+            }
+
+            if(!rightHandSide.equals(((FunctionDefinition) other).rightHandSide)){
+                return false;
+            }
+
+            // check that all arguments match
+            int i = 0;
+            for(Expr otherArg : ((FunctionDefinition) other).variables){
+                if(!variables.get(i).equals(otherArg)){
+                    return false;
+                }
+                i++;
+            }
+            return true;
         }
     }
 
@@ -172,6 +284,14 @@ public abstract class Expr {
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitLet(this, mode);
         }
+
+        @Override
+        public boolean equals(Object other) {
+            return (other instanceof Let) &&
+                    ((Let) other).target.equals(target) &&
+                    ((Let) other).rightHandSide.equals(rightHandSide) &&
+                    ((Let) other).inExpr.equals(inExpr);
+        }
     }
 
     static class LetRec extends Expr{
@@ -187,6 +307,36 @@ public abstract class Expr {
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitLetRec(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+
+            if(!(other instanceof LetRec)){
+                return false;
+            }
+
+            if(!(((LetRec) other).inExpr.equals(inExpr))){
+                return false;
+            }
+
+            // must have same number of parallel definitions
+            if(!(((LetRec) other).parallelDefs.size() == parallelDefs.size())){
+                return false;
+            }
+
+
+            // now we can check if every pair matches
+            int i = 0;
+            for(Pair<Expr, Expr> p : parallelDefs){
+
+                // pairs are Java records,
+                // and they get compared by calling equals on first and second component?
+                if(!((LetRec) other).parallelDefs.get(i).equals(p)){
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
