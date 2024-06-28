@@ -33,6 +33,123 @@ public class CompilerTest {
     }
 
     @Test
+    public void testTupleUnpacking(){
+
+        /*
+        // let (x, y) = (5, 3) in x + y
+        Expr expr = new Expr.Let(
+                new Expr.Tuple(List.of(new Expr.Variable("x"), new Expr.Variable("y"))),
+                new Expr.Tuple(List.of(new Expr.IntLiteral(5), new Expr.IntLiteral(3))),
+                new Expr.BinOp(new Expr.Variable("x"), BinaryOperator.PLUS, new Expr.Variable("y"))
+        );
+
+        Code code = compiler.codeV(expr);
+
+        Code expectedCode = new Code();
+
+        // 5
+        expectedCode.addInstruction(new Instr.LoadC(5), 0);
+        expectedCode.addInstruction(new Instr.MakeBasic(), 1);
+        // 3
+        expectedCode.addInstruction(new Instr.LoadC(3), 1);
+        expectedCode.addInstruction(new Instr.MakeBasic(), 2);
+        // make into a tuple (consumes arguments and places one on the stack)
+        expectedCode.addInstruction(new Instr.MakeVec(2), 2);
+
+        // transforms the address to the vector again into the raw values of the vector
+        expectedCode.addInstruction(new Instr.GetVec(2), 1);
+
+        // getvec increases the stack distance by 2
+        // x + y
+
+        // load x
+        expectedCode.addInstruction(new Instr.PushLoc(2), 3);
+        expectedCode.addInstruction(new Instr.GetBasic(), 4);
+
+        // load y
+        expectedCode.addInstruction(new Instr.PushLoc(2), 4);
+        expectedCode.addInstruction(new Instr.GetBasic(), 5);
+
+        expectedCode.addInstruction(new Instr.Add(), 5);
+
+        // make basic because we have a codeV
+        expectedCode.addInstruction(new Instr.MakeBasic(), 4);
+
+        expectedCode.addInstruction(new Instr.Slide(2), 4);
+
+        assertEquals(expectedCode.toString(), code.toString());
+         */
+    }
+
+    @Test
+    public void testMultipleTupleUnpacking(){
+
+        // let (x, y) = (5, 3) in let (a, b) = (1, 2) in a + b + x + y
+        Expr expr = new Expr.Let(
+                new Expr.Tuple(List.of(new Expr.Variable("x"), new Expr.Variable("y"))),
+                new Expr.Tuple(List.of(new Expr.IntLiteral(5), new Expr.IntLiteral(3))),
+                new Expr.Let(
+                        new Expr.Tuple(List.of(new Expr.Variable("a"), new Expr.Variable("b"))),
+                        new Expr.Tuple(List.of(new Expr.IntLiteral(1), new Expr.IntLiteral(2))),
+                        new Expr.BinOp(
+                                new Expr.Variable("a"),
+                                BinaryOperator.PLUS,
+                                new Expr.BinOp(new Expr.Variable("b"),
+                                        BinaryOperator.PLUS,
+                                        new Expr.BinOp(new Expr.Variable("x"),
+                                                BinaryOperator.PLUS, new Expr.Variable("y")))
+                ))
+        );
+
+        Code code = compiler.codeV(expr);
+
+        Code expectedCode = new Code();
+
+        // 5
+        expectedCode.addInstruction(new Instr.LoadC(5), 0);
+        expectedCode.addInstruction(new Instr.MakeBasic(), 1);
+        // 3
+        expectedCode.addInstruction(new Instr.LoadC(3), 1);
+        expectedCode.addInstruction(new Instr.MakeBasic(), 2);
+        // make into a tuple (consumes arguments and places one on the stack)
+        expectedCode.addInstruction(new Instr.MakeVec(2), 2);
+
+        // transforms the address to the vector again into the raw values of the vector
+        expectedCode.addInstruction(new Instr.GetVec(2), 1);
+
+        // 1
+        expectedCode.addInstruction(new Instr.LoadC(1), 2);
+        expectedCode.addInstruction(new Instr.MakeBasic(), 3);
+        // 2
+        expectedCode.addInstruction(new Instr.LoadC(2), 3);
+        expectedCode.addInstruction(new Instr.MakeBasic(), 4);
+        // make into a tuple (consumes arguments and places one on the stack)
+        expectedCode.addInstruction(new Instr.MakeVec(2), 4);
+
+        // transforms the address to the vector again into the raw values of the vector
+        expectedCode.addInstruction(new Instr.GetVec(2), 3);
+
+        // load a
+        /*
+        expectedCode.addInstruction(new Instr.PushLoc(2), 3);
+        expectedCode.addInstruction(new Instr.GetBasic(), 4);
+
+        // load b
+        expectedCode.addInstruction(new Instr.PushLoc(2), 4);
+        expectedCode.addInstruction(new Instr.GetBasic(), 5);
+
+        expectedCode.addInstruction(new Instr.Add(), 5);
+
+        // make basic because we have a codeV
+        expectedCode.addInstruction(new Instr.MakeBasic(), 4);
+
+        expectedCode.addInstruction(new Instr.Slide(2), 4);
+
+        assertEquals(expectedCode.toString(), code.toString());
+         */
+    }
+
+    @Test
     public void testNestedLet(){
         Expr expr = new Expr.Let(
                 new Expr.Variable("a"),
@@ -238,6 +355,5 @@ public class CompilerTest {
         expected.addInstruction(new Instr.Slide(1), "_5", 2);
 
         assertEquals(expected.toString(), code.toString());
-
     }
 }

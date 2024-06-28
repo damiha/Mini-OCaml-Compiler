@@ -29,6 +29,20 @@ public class Instr {
         }
     }
 
+    static class GetVec extends Instr{
+
+        int k;
+
+        public GetVec(int k){
+            this.k = k;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("GetVec %d", k);
+        }
+    }
+
     static class PushLoc extends Instr {
         int relativeAddress;
 

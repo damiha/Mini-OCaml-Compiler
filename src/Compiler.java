@@ -118,14 +118,26 @@ public class Compiler implements Expr.Visitor<Code>{
 
         environment = environment.deepCopy();
 
-        int letCounter = 0;
+        int slideCounter = 0;
 
         do{
             code.addCode(codeV(((Expr.Let) current).rightHandSide));
-            letCounter += 1;
 
             // we insert after the codeV because only when the right hand side exists, the variable is defined
-            environment.insert(((Expr.Let) current).target, Visibility.L, stackDistance, Index.INCREASING);
+            int k = environment.insert(((Expr.Let) current).target, Visibility.L, stackDistance, Index.INCREASING);
+
+            // if the target is a tuple, that means the right hand side must also be a tuple
+            // so currently, a pointer to a tuple lies on the test
+            boolean isTuple = ((Expr.Let) current).target instanceof Expr.Tuple;
+
+            if(isTuple) {
+                code.addInstruction(new Instr.GetVec(k), stackDistance);
+
+                // Get(k) puts k on the stack and consumes 1 so k - 1
+                stackDistance += (k-1);
+            }
+
+            slideCounter += k;
 
             current = ((Expr.Let) current).inExpr;
 
@@ -135,7 +147,7 @@ public class Compiler implements Expr.Visitor<Code>{
         code.addCode(codeV(current));
 
         // slide n to destroy all variables in the context
-        addSlide(code, letCounter);
+        addSlide(code, slideCounter);
 
         environment = previous;
 
