@@ -35,7 +35,28 @@ public class Code {
     }
 
     private void mergeJumpTables(Code other){
-        // TODO
+        int offset = jumpLabelsIssued;
+        int codeOffset = instructions.size();
+
+        Map<String, String> oldToNewJumpLabels = new HashMap<>();
+
+        for(int i = 0; i < other.jumpLabelsIssued; i++){
+            String oldLabel = String.format("_%d", i);
+            String newLabel = String.format("_%d", offset + i);
+
+            // for changing the jump instructions to the new labels
+            oldToNewJumpLabels.put(oldLabel, newLabel);
+
+            jumpTable.put(newLabel, codeOffset + other.jumpTable.get(oldLabel));
+        }
+
+        // change the jump instructions
+        for(Instr instr : other.instructions){
+            if(instr instanceof Instr.Jump){
+                String oldLabel =  ((Instr.Jump) instr).jumpLabel;
+                ((Instr.Jump) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
+            }
+        }
     }
 
     public void addCode(Code other, String jumpLabel){

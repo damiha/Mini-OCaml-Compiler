@@ -36,6 +36,14 @@ public abstract class Expr {
 
     static class UnOp extends Expr{
 
+        Expr expr;
+        UnaryOperator operator;
+
+        public UnOp(UnaryOperator operator, Expr expr){
+            this.operator = operator;
+            this.expr = expr;
+        }
+
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitUnOp(this, mode);
@@ -68,6 +76,15 @@ public abstract class Expr {
     }
 
     static class FunctionApplication extends Expr{
+
+        Expr functionExpr;
+
+        List<Expr> exprArguments;
+
+        public FunctionApplication(Expr functionExpr, List<Expr> exprArguments){
+            this.functionExpr = functionExpr;
+            this.exprArguments = new ArrayList<>(exprArguments);
+        }
 
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {

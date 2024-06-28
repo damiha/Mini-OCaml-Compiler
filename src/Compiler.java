@@ -45,7 +45,6 @@ public class Compiler implements Expr.Visitor<Code>{
         Code code = new Code();
 
         code.addCode(getVar(variable));
-        stackDistance += 1;
 
         if(mode == GenerationMode.B){
             code.addInstruction(new Instr.GetBasic(), stackDistance);
@@ -65,6 +64,8 @@ public class Compiler implements Expr.Visitor<Code>{
         else{
             code.addInstruction(new Instr.PushGlob(pair.second()), stackDistance);
         }
+
+        stackDistance += 1;
 
         return code;
     }
@@ -151,10 +152,27 @@ public class Compiler implements Expr.Visitor<Code>{
 
         // first, gather all free variables (not function parameters, not locals)
         // and wrap them in a global vector
-        Set<Expr.Variable> freeVariables = free(functionDefinition.rightHandSide);
 
+        // we add the parameters so they don't show up as the free variables
+        // add the parameters to the address environment
+        Environment previous = environment;
+        Environment functionEnvironment = new Environment();
+
+        int i = 0;
+        for(Expr.Variable variable : functionDefinition.variables){
+            functionEnvironment.insert(variable.varName, Visibility.L, -i);
+            i++;
+        }
+
+        Set<Expr.Variable> freeVariables = free(functionDefinition.rightHandSide, functionEnvironment);
+
+        int globVars = 0;
         for(Expr.Variable var : freeVariables){
-            code.addCode(codeV(var));
+
+            functionEnvironment.insert(var.varName, Visibility.G, globVars++);
+
+            // with respect to the calling scope
+            code.addCode(getVar(var));
         }
 
         int g = freeVariables.size();
@@ -175,6 +193,10 @@ public class Compiler implements Expr.Visitor<Code>{
         stackDistance = 0;
 
         code.addInstruction(new Instr.TestArg(k), jumpToFunction, stackDistance);
+
+        // now, we are in the function body so we need the function environment
+        environment = functionEnvironment;
+
         code.addCode(codeV(functionDefinition.rightHandSide));
         code.addInstruction(new Instr.Return(k), stackDistance);
 
@@ -185,6 +207,9 @@ public class Compiler implements Expr.Visitor<Code>{
 
         // for future code (we don't know yet what comes here)
         code.setJumpLabelAtEnd(jumpOverFunction);
+
+        // restore old environment
+        environment = previous;
 
         return code;
     }
@@ -206,10 +231,45 @@ public class Compiler implements Expr.Visitor<Code>{
 
         Set<Expr.Variable> freeVars = new HashSet<>();
 
-        // TODO: CONTINUE HERE
         if(expr instanceof Expr.Variable){
             if(!surroundingEnvironment.env.containsKey(((Expr.Variable) expr).varName)){
                 freeVars.add((Expr.Variable) expr);
+            }
+        }
+        else if(expr instanceof Expr.UnOp){
+            return free(((Expr.UnOp)expr).expr, surroundingEnvironment);
+        }
+        else if(expr instanceof Expr.BinOp){
+
+            Set<Expr.Variable> freeVarsLeft = free(((Expr.BinOp) expr).left, surroundingEnvironment);
+            Set<Expr.Variable> freeVarsRight = free(((Expr.BinOp) expr).right, surroundingEnvironment);
+            freeVarsLeft.addAll(freeVarsRight);
+
+            return freeVarsLeft;
+        }
+        else if(expr instanceof Expr.FunctionDefinition){
+            // the parameters are now defined, at least they are not free anymore
+            Environment newSurrounding = surroundingEnvironment.deepCopy();
+
+            for(Expr.Variable var : ((Expr.FunctionDefinition) expr).variables){
+                // the address is not really important for this 'free' check
+                newSurrounding.insert(var.varName, Visibility.L, 0);
+            }
+
+            return free(((Expr.FunctionDefinition) expr).rightHandSide, newSurrounding);
+        }
+        else if(expr instanceof Expr.Let){
+           Environment newSurrounding = surroundingEnvironment.deepCopy();
+
+           newSurrounding.insert(((Expr.Let) expr).target.varName, Visibility.L, 0);
+
+           return free(((Expr.Let) expr).inExpr, newSurrounding);
+        }
+        else if(expr instanceof Expr.FunctionApplication){
+            Set<Expr.Variable> freeFunction = free(((Expr.FunctionApplication) expr).functionExpr, surroundingEnvironment);
+
+            for(Expr argumentExpr : ((Expr.FunctionApplication) expr).exprArguments){
+                freeFunction.addAll(free(argumentExpr, surroundingEnvironment));
             }
         }
 
