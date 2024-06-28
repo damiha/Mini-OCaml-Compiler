@@ -107,6 +107,49 @@ public class Compiler implements Expr.Visitor<Code>{
     }
 
     @Override
+    public Code visitLetRec(Expr.LetRec letRec, GenerationMode mode) {
+
+        Code code = new Code();
+
+        int n = letRec.parallelDefs.size();
+
+        int prevStackDistance = stackDistance;
+
+        code.addInstruction(new Instr.Alloc(n), stackDistance);
+
+        Environment previous = environment;
+        environment = environment.deepCopy();
+
+        // since everything is defined 'in parallel', all variables
+        // are available at once
+        int i = 1;
+        for(Pair<Expr.Variable, Expr> p : letRec.parallelDefs){
+            environment.insert(p.first().varName, Visibility.L, prevStackDistance + i);
+        }
+
+        // let evaluates from left to right
+        i = 0;
+        for(Pair<Expr.Variable, Expr> p : letRec.parallelDefs){
+
+            stackDistance = prevStackDistance + n;
+
+            code.addCode(codeV(p.second()));
+
+            code.addInstruction(new Instr.Rewrite(n - i), stackDistance);
+        }
+
+        stackDistance = prevStackDistance + n;
+        code.addCode(codeV(letRec.inExpr));
+
+        // we don't need the prev stack distance stuff
+        code.addInstruction(new Instr.Slide(n), stackDistance);
+
+        environment = previous;
+
+        return code;
+    }
+
+    @Override
     public Code visitUnOp(Expr.UnOp unOp, GenerationMode mode) {
         return null;
     }
@@ -138,11 +181,6 @@ public class Compiler implements Expr.Visitor<Code>{
         }
 
         return code;
-    }
-
-    @Override
-    public Code visitLetRec(Expr.LetRec letRec, GenerationMode mode) {
-        return null;
     }
 
     @Override
@@ -252,6 +290,18 @@ public class Compiler implements Expr.Visitor<Code>{
 
             return freeVarsLeft;
         }
+        else if (expr instanceof Expr.If){
+
+            // there cannot be a variable definition in the condition of an if
+            // don't allow: if (let a = 5) >= 1 then ...
+            Set<Expr.Variable> freeVarsCond = free(((Expr.If) expr).condition, surroundingEnvironment);
+            Set<Expr.Variable> freeVarsIf = free(((Expr.If) expr).ifBranchExpr, surroundingEnvironment);
+            Set<Expr.Variable> freeVarsElse = free(((Expr.If) expr).elseBranchExpr, surroundingEnvironment);
+
+            freeVars.addAll(freeVarsCond);
+            freeVars.addAll(freeVarsIf);
+            freeVars.addAll(freeVarsElse);
+        }
         else if(expr instanceof Expr.FunctionDefinition){
             // the parameters are now defined, at least they are not free anymore
             Environment newSurrounding = surroundingEnvironment.deepCopy();
@@ -272,9 +322,10 @@ public class Compiler implements Expr.Visitor<Code>{
         }
         else if(expr instanceof Expr.FunctionApplication){
             Set<Expr.Variable> freeFunction = free(((Expr.FunctionApplication) expr).functionExpr, surroundingEnvironment);
+            freeVars.addAll(freeFunction);
 
             for(Expr argumentExpr : ((Expr.FunctionApplication) expr).exprArguments){
-                freeFunction.addAll(free(argumentExpr, surroundingEnvironment));
+                freeVars.addAll(free(argumentExpr, surroundingEnvironment));
             }
         }
 
@@ -310,6 +361,22 @@ public class Compiler implements Expr.Visitor<Code>{
 
     @Override
     public Code visitIf(Expr.If ifExpr, GenerationMode mode) {
-        return null;
+
+        Code code = new Code();
+        String jumpOverIfBranch = code.getNewJumpLabel();
+        String jumpOverElseBranch = code.getNewJumpLabel();
+
+        code.addCode(codeB(ifExpr.condition));
+
+        code.addInstruction(new Instr.JumpZ(jumpOverIfBranch), stackDistance);
+
+        code.addCode(codeV(ifExpr.ifBranchExpr));
+        code.addInstruction(new Instr.Jump(jumpOverElseBranch), stackDistance);
+
+        code.addCode(codeV(ifExpr.elseBranchExpr), jumpOverIfBranch);
+
+        code.setJumpLabelAtEnd(jumpOverElseBranch);
+
+        return code;
     }
 }

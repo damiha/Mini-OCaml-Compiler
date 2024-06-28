@@ -97,6 +97,32 @@ public class Instr {
         }
     }
 
+    static class Alloc extends Instr{
+
+        int n;
+
+        public Alloc(int n){
+            this.n = n;
+        }
+
+        public String toString(){
+            return String.format("Alloc %d", n);
+        }
+    }
+
+    static class Rewrite extends Instr{
+
+        int n;
+
+        public Rewrite(int n){
+            this.n = n;
+        }
+
+        public String toString(){
+            return String.format("Rewrite %d", n);
+        }
+    }
+
     static class Apply extends Instr{
 
         @Override
@@ -115,6 +141,19 @@ public class Instr {
         @Override
         public String toString(){
             return String.format("Jump %s", jumpLabel);
+        }
+    }
+
+    static class JumpZ extends Instr{
+        String jumpLabel;
+
+        public JumpZ(String jumpLabel){
+            this.jumpLabel = jumpLabel;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("JumpZ %s", jumpLabel);
         }
     }
 
@@ -159,6 +198,13 @@ public class Instr {
         @Override
         public String toString(){
             return "Mul";
+        }
+    }
+
+    static class LessThanOrEqual extends Instr {
+        @Override
+        public String toString(){
+            return "LessThanOrEqual";
         }
     }
 

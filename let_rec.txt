@@ -1,22 +1,4 @@
-import java.util.List;
-
-public class Main {
-    public static void main(String[] args) {
-
-        /*
-        Expr expr = new Expr.IntLiteral(19);
-         */
-
-        // test global vars
-        /*
-        Compiler compiler = new Compiler();
-
-        compiler.environment.insert("x", Visibility.G, 1);
-
-        Expr expr = new Expr.Variable("x");
-         */
-
-        Expr expr = new Expr.LetRec(
+Expr expr = new Expr.LetRec(
                 List.of(
                         new Pair<>(
                                 new Expr.Variable("f"),
@@ -36,12 +18,3 @@ public class Main {
                 ),
                 new Expr.FunctionApplication(new Expr.Variable("f"), List.of(new Expr.IntLiteral(1)))
         );
-
-        Compiler compiler = new Compiler();
-        compiler.stackDistance = 0;
-
-        Code code = compiler.codeV(expr);
-
-        System.out.println(code);
-    }
-}

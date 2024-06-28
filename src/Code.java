@@ -57,6 +57,10 @@ public class Code {
                 String oldLabel =  ((Instr.Jump) instr).jumpLabel;
                 ((Instr.Jump) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
             }
+            if(instr instanceof Instr.JumpZ){
+                String oldLabel =  ((Instr.JumpZ) instr).jumpLabel;
+                ((Instr.JumpZ) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
+            }
             else if(instr instanceof Instr.Mark){
                 String oldLabel =  ((Instr.Mark) instr).jumpLabel;
                 ((Instr.Mark) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
@@ -87,7 +91,7 @@ public class Code {
     }
 
     private String[] getJumpLabelPrefix(){
-        String[] jumpLabelPrefix = new String[instructions.size()];
+        String[] jumpLabelPrefix = new String[instructions.size() + 1];
 
         for(String jumpLabel : jumpTable.keySet()){
 
@@ -115,6 +119,10 @@ public class Code {
             prefix = prefix != null ? prefix : "";
 
             instructionStrings.add(String.format("%d %s%s", stackDistances.get(i), prefix, instructions.get(i)));
+        }
+
+        if(jumpLabelPrefix[instructions.size()] != null){
+            instructionStrings.add(String.format("%s: ", jumpLabelPrefix[instructions.size()]));
         }
 
         return String.join("\n", instructionStrings);

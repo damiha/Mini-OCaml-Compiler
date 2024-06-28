@@ -69,6 +69,16 @@ public abstract class Expr {
 
     static class If extends Expr{
 
+        Expr condition;
+        Expr ifBranchExpr;
+        Expr elseBranchExpr;
+
+        public If(Expr condition, Expr ifBranchExpr, Expr elseBranchExpr){
+            this.condition = condition;
+            this.ifBranchExpr = ifBranchExpr;
+            this.elseBranchExpr = elseBranchExpr;
+        }
+
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
             return visitor.visitIf(this, mode);
@@ -134,6 +144,14 @@ public abstract class Expr {
     }
 
     static class LetRec extends Expr{
+
+        List<Pair<Variable, Expr>> parallelDefs;
+        Expr inExpr;
+
+        public LetRec(List<Pair<Variable, Expr>> parallelDefs, Expr inExpr){
+            this.parallelDefs = new ArrayList<>(parallelDefs);
+            this.inExpr = inExpr;
+        }
 
         @Override
         <T> T accept(Visitor<T> visitor, GenerationMode mode) {
