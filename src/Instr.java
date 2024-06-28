@@ -84,6 +84,27 @@ public class Instr {
         }
     }
 
+    static class Mark extends Instr{
+        String jumpLabel;
+
+        public Mark(String jumpLabel){
+            this.jumpLabel = jumpLabel;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("Mark %s", jumpLabel);
+        }
+    }
+
+    static class Apply extends Instr{
+
+        @Override
+        public String toString(){
+            return "Apply";
+        }
+    }
+
     static class Jump extends Instr {
         String jumpLabel;
 

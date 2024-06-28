@@ -176,7 +176,12 @@ public class Compiler implements Expr.Visitor<Code>{
         }
 
         int g = freeVariables.size();
+
         code.addInstruction(new Instr.MakeVec(g), stackDistance);
+
+        // make vec consumes all the g arguments (so -g) and adds one address (the one to the global vector)
+        // on the stack
+        stackDistance = stackDistance - g + 1;
 
         String jumpToFunction = code.getNewJumpLabel();
         String jumpOverFunction = code.getNewJumpLabel();
@@ -278,7 +283,29 @@ public class Compiler implements Expr.Visitor<Code>{
 
     @Override
     public Code visitFunctionApplication(Expr.FunctionApplication functionApplication, GenerationMode mode) {
-        return null;
+
+        Code code = new Code();
+
+        // we save the
+        String continueAfterFunctionCall = code.getNewJumpLabel();
+
+        code.addInstruction(new Instr.Mark(continueAfterFunctionCall), stackDistance);
+
+        // reserve three spots for the organizational cells
+        stackDistance += 3;
+
+        // push all the arguments on the stack, start from right to left (that's why reversed)
+        for(Expr exprArgument : functionApplication.exprArguments.reversed()){
+            code.addCode(codeV(exprArgument));
+        }
+
+        code.addCode(codeV(functionApplication.functionExpr));
+
+        code.addInstruction(new Instr.Apply(), stackDistance);
+
+        code.setJumpLabelAtEnd(continueAfterFunctionCall);
+
+        return code;
     }
 
     @Override

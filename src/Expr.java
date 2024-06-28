@@ -96,14 +96,11 @@ public abstract class Expr {
 
     static class FunctionDefinition extends Expr{
 
-        String functionName;
-
         List<Variable> variables;
 
         Expr rightHandSide;
 
-        public FunctionDefinition(String functionName, List<Variable> variables, Expr rightHandSide){
-            this.functionName = functionName;
+        public FunctionDefinition(List<Variable> variables, Expr rightHandSide){
             this.variables = new ArrayList<>(variables);
             this.rightHandSide = rightHandSide;
         }

@@ -35,6 +35,7 @@ public class Code {
     }
 
     private void mergeJumpTables(Code other){
+
         int offset = jumpLabelsIssued;
         int codeOffset = instructions.size();
 
@@ -56,7 +57,13 @@ public class Code {
                 String oldLabel =  ((Instr.Jump) instr).jumpLabel;
                 ((Instr.Jump) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
             }
+            else if(instr instanceof Instr.Mark){
+                String oldLabel =  ((Instr.Mark) instr).jumpLabel;
+                ((Instr.Mark) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
+            }
         }
+
+        jumpLabelsIssued += other.jumpLabelsIssued;
     }
 
     public void addCode(Code other, String jumpLabel){
