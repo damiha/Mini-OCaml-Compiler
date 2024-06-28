@@ -52,6 +52,8 @@ public class Code {
         }
 
         // change the jump instructions
+
+        // super important, common error source
         for(Instr instr : other.instructions){
             if(instr instanceof Instr.Jump){
                 String oldLabel =  ((Instr.Jump) instr).jumpLabel;
@@ -64,6 +66,10 @@ public class Code {
             else if(instr instanceof Instr.Mark){
                 String oldLabel =  ((Instr.Mark) instr).jumpLabel;
                 ((Instr.Mark) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
+            }
+            else if(instr instanceof Instr.MakeFunVal){
+                String oldLabel =  ((Instr.MakeFunVal) instr).jumpLabel;
+                ((Instr.MakeFunVal) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
             }
         }
 

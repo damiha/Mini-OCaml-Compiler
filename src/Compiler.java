@@ -151,6 +151,10 @@ public class Compiler implements Expr.Visitor<Code>{
 
         environment = previous;
 
+        if(mode == GenerationMode.B){
+            code.addInstruction(new Instr.GetBasic(), stackDistance);
+        }
+
         return code;
     }
 
@@ -358,7 +362,7 @@ public class Compiler implements Expr.Visitor<Code>{
             // the parameters are now defined, at least they are not free anymore
             Environment newSurrounding = surroundingEnvironment.deepCopy();
 
-            newSurrounding.insert(expr, Visibility.L, 0, Index.INCREASING);
+            newSurrounding.insert(((Expr.FunctionDefinition) expr).variables, Visibility.L, 0, Index.INCREASING);
 
             return free(((Expr.FunctionDefinition) expr).rightHandSide, newSurrounding);
         }

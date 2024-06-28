@@ -38,4 +38,25 @@ public class HeapElement {
             return String.format("(V, [%s])", addressesAsString);
         }
     }
+
+    static class Function extends HeapElement{
+
+        String jumpLabelFunctionStart;
+        int appliedArgumentsVectorAddress;
+        int globalVectorHeapAddress;
+
+        public Function(String jumpLabelFunctionStart, int appliedArgumentsVectorAddress, int globalVectorHeapAddress){
+            this.jumpLabelFunctionStart = jumpLabelFunctionStart;
+            this.appliedArgumentsVectorAddress = appliedArgumentsVectorAddress;
+            this.globalVectorHeapAddress = globalVectorHeapAddress;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("(F, ret: %s, ap: %d, gp: %d)",
+                    jumpLabelFunctionStart,
+                    appliedArgumentsVectorAddress,
+                    globalVectorHeapAddress);
+        }
+    }
 }
