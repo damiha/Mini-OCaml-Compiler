@@ -53,10 +53,31 @@ public class HeapElement {
 
         @Override
         public String toString(){
-            return String.format("(F, ret: %s, ap: %d, gp: %d)",
+            return String.format("(F, cp: %s, ap: %d, gp: %d)",
                     jumpLabelFunctionStart,
                     appliedArgumentsVectorAddress,
                     globalVectorHeapAddress);
+        }
+    }
+
+    // closure = code + global vector
+    // closures are 'snapshots' of functions
+    static class Closure extends HeapElement {
+        int globalVectorHeapAddress;
+        String jumpLabelFunctionStart;
+
+        public Closure(String jumpLabelFunctionStart, int globalVectorHeapAddress){
+            this.jumpLabelFunctionStart = jumpLabelFunctionStart;
+            this.globalVectorHeapAddress = globalVectorHeapAddress;
+        }
+
+        // creates a dummy (important for let rec)
+        public Closure(){
+            this("-1", -1);
+        }
+
+        public String toString(){
+            return String.format("(C, cp: %s, gp: %d)", jumpLabelFunctionStart, globalVectorHeapAddress);
         }
     }
 }

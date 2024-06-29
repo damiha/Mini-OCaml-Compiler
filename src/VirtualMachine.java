@@ -123,6 +123,36 @@ public class VirtualMachine {
                 stack[stackPointer] = addressToVector;
                 stackTypes[stackPointer] = StackType.H;
             }
+            else if(instruction instanceof Instr.Alloc){
+                int n = ((Instr.Alloc) instruction).n;
+
+                for(int i = 1; i <= n; i++){
+                    // adds dummy closures to the heap so they can be filled in later
+                    stack[stackPointer + i] = heap.insert(new HeapElement.Closure());
+                    stackTypes[stackPointer + i] = StackType.H;
+                }
+
+                stackPointer = stackPointer + n;
+            }
+            else if(instruction instanceof Instr.Rewrite){
+
+                // the heap object whose address is on top of the stack
+                // should be inserted n cells down below
+                int n = ((Instr.Rewrite) instruction).n;
+
+                int heapAddress = stack[stackPointer];
+                HeapElement newHeapElement = heap.get(heapAddress);
+
+                int heapAddressWhereChange = stack[stackPointer - n];
+
+                heap.data.set(heapAddressWhereChange, newHeapElement);
+
+                // consume heap address (which was used to rewrite)
+                stackPointer -= 1;
+            }
+            else if(instruction instanceof Instr.LessThanOrEqual){
+                executeBinOp(BinaryOperator.LEQ);
+            }
             else if(instruction instanceof Instr.MakeFunVal){
                 // top most value is the global vector
                 int globalVectorAddress = stack[stackPointer];
@@ -155,6 +185,16 @@ public class VirtualMachine {
                 String jumpLabel = ((Instr.Jump) instruction).jumpLabel;
                 programCounter = jumpTable.get(jumpLabel);
             }
+            else if(instruction instanceof Instr.JumpZ){
+                String jumpLabel = ((Instr.JumpZ) instruction).jumpLabel;
+
+                if(stack[stackPointer] == 0){
+                    programCounter = jumpTable.get(jumpLabel);
+                }
+
+                // in any case, the conditional value is consumed
+                stackPointer--;
+            }
             else if(instruction instanceof Instr.Mark){
                 // the mark instruction establishes the new stackframe
 
@@ -162,12 +202,16 @@ public class VirtualMachine {
                 // below the old frame pointer
                 // below the old global vector
                 stack[stackPointer + 1] = globalPointer;
+                stackTypes[stackPointer + 1] = StackType.H;
+
                 stack[stackPointer + 2] = framePointer;
+                stackTypes[stackPointer + 2] = StackType.V;
 
                 String jumpLabelAfterReturn = ((Instr.Mark) instruction).jumpLabel;
                 int jumpAddressAfterReturn = jumpTable.get(jumpLabelAfterReturn);
 
                 stack[stackPointer + 3] = jumpAddressAfterReturn;
+                stackTypes[stackPointer + 3] = StackType.V;
 
                 framePointer = stackPointer + 3;
                 stackPointer += 3;
@@ -400,7 +444,7 @@ public class VirtualMachine {
             int content = stack[stackLocation];
             StackType type = stackTypes[stackLocation];
 
-            res.append(String.format("%d %d (%s)\n", stackLocation, content, type));
+            res.append(String.format("%d | %d (%s)\n", stackLocation, content, type));
         }
         return res.toString();
     }

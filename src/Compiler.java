@@ -201,6 +201,10 @@ public class Compiler implements Expr.Visitor<Code>{
 
         environment = previous;
 
+        if(mode == GenerationMode.B){
+            code.addInstruction(new Instr.GetBasic(), stackDistance);
+        }
+
         return code;
     }
 

@@ -58,4 +58,43 @@ public class BehaviorTest {
         // 10 + 20 + 30
         assertEquals(result, 60);
     }
+
+    @Test
+    public void testLetRec0(){
+
+        // this should calculate the factorial function
+        String source = "let rec a = 3 in a";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(3, result);
+    }
+
+    @Test
+    public void testLet2(){
+
+        // this should calculate the factorial function
+        String source = "let rec f = fun x y -> if y <= 5 then x else 16 in f 3 2";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(3, result);
+    }
+
+    @Test
+    public void testLetRec1(){
+
+        // this should calculate the factorial function
+        String source = "let rec f = fun x y -> if y <= 1 then x else f ( x * y ) ( y - 1 ) in f 1 3";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 6);
+    }
 }
