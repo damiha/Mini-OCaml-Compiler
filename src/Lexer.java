@@ -54,6 +54,9 @@ public class Lexer {
                 case '(':
                     addToken(TokenType.LEFT_PAREN);
                     break;
+                case '#':
+                    addToken(TokenType.HASH);
+                    break;
                 case ')':
                     addToken(TokenType.RIGHT_PAREN);
                     break;

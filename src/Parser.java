@@ -298,6 +298,10 @@ public class Parser {
 
     private Expr unary(){
 
+        if(match(TokenType.HASH)){
+            Token index = consume(TokenType.NUMBER, "After #, an index must follow.");
+            return new Expr.TupleAccess(expression(), (Integer)index.value);
+        }
         if(match(TokenType.BANG)){
             return new Expr.UnOp(UnaryOperator.NOT, unary());
         }

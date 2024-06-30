@@ -68,6 +68,20 @@ public class BehaviorTest {
         assertEquals(result, 4);
     }
 
+    @Test
+    public void tupleAccess1(){
+
+        String source = "let f = (fun p -> #2 p) in f (1, 3, 5, 7)";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 5);
+    }
+
+    // RECURSIVE TUPLE UNPACKING DOESN'T WORK YET
+
     // unpack a tuple that is returned?
     @Test
     public void tupleAndFunctions2(){
