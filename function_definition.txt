@@ -1,9 +1,0 @@
-Expr expr = new Expr.Let(
-                new Expr.Variable("a"),
-                new Expr.IntLiteral(1),
-                new Expr.FunctionDefinition(
-                        "f",
-                        List.of(new Expr.Variable("b")),
-                        new Expr.BinOp(new Expr.Variable("a"), BinaryOperator.PLUS, new Expr.Variable("b"))
-                )
-        );
