@@ -242,6 +242,8 @@ public class Compiler implements Expr.Visitor<Code>{
             case BinaryOperator.MINUS:
                 code.addInstruction(new Instr.Sub(), stackDistance);
                 break;
+            default:
+                throw new RuntimeException("Instruction not yet implemented.");
         }
 
         // one operator is consumed
@@ -321,19 +323,6 @@ public class Compiler implements Expr.Visitor<Code>{
         return code;
     }
 
-    private Set<Expr> free(Expr expr){
-
-        Environment previous = environment;
-        environment = environment.deepCopy();
-
-        Set<Expr> freeVariables = free(expr, environment);
-
-        // restore old environment
-        environment = previous;
-
-        return freeVariables;
-    }
-
     private Set<Expr> free(Expr expr, Environment surroundingEnvironment){
 
         Set<Expr> freeVars = new HashSet<>();
@@ -377,7 +366,8 @@ public class Compiler implements Expr.Visitor<Code>{
         else if(expr instanceof Expr.Let){
            Environment newSurrounding = surroundingEnvironment.deepCopy();
 
-           newSurrounding.insert(expr, Visibility.L, 0, Index.INCREASING);
+           // right hand side is known
+           newSurrounding.insert(((Expr.Let) expr).target, Visibility.L, 0, Index.INCREASING);
 
            return free(((Expr.Let) expr).inExpr, newSurrounding);
         }

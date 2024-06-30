@@ -1,4 +1,5 @@
 import java.util.Map;
+import java.util.Vector;
 
 public class VirtualMachine {
 
@@ -274,6 +275,44 @@ public class VirtualMachine {
             }
             else if(instruction instanceof Instr.Add){
                 executeBinOp(BinaryOperator.PLUS);
+            }
+            else if(instruction instanceof Instr.GetVec){
+                // make vec makes vector and returns heap addres
+                // get vec pushes on the values on the stack and consumes the heap address
+                int heapAddress = stack[stackPointer];
+
+                HeapElement element = heap.get(heapAddress);
+
+                if(!(element instanceof HeapElement.Vector)){
+                    throw new RuntimeException("Not a vector.");
+                }
+
+                HeapElement.Vector vec = (HeapElement.Vector) element;
+
+                stackPointer--;
+
+                // overwrite the heap address with the first value
+                for(int i = 0; i < ((Instr.GetVec) instruction).k; i++){
+                    stack[++stackPointer] = vec.get(i);
+                }
+            }
+            else if(instruction instanceof Instr.Get){
+                // the address of the vector lies on the stack
+                HeapElement heapElement = heap.get(stack[stackPointer]);
+
+                if(!(heapElement instanceof HeapElement.Vector)){
+                    throw new RuntimeException("Get must index into a vector");
+                }
+
+                HeapElement.Vector vec = (HeapElement.Vector) heapElement;
+
+                int j = ((Instr.Get) instruction).j;
+
+                if(j < 0 || j >= vec.values.size()){
+                    throw new RuntimeException("Index out of bounds.");
+                }
+
+                stack[stackPointer] = vec.get(j);
             }
             else if(instruction instanceof Instr.Sub){
                 executeBinOp(BinaryOperator.MINUS);

@@ -21,6 +21,67 @@ public class BehaviorTest {
     }
 
     @Test
+    public void tupleUnpacking1(){
+
+        String source = "let (a, b) = (5, 3) in a + b";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 8);
+    }
+
+    @Test
+    public void tupleUnpacking2(){
+
+        String source = "let (a, b, c) = (5, 3, 8) in a + b + c";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 16);
+    }
+
+    @Test
+    public void nestedTupleUnpacking1(){
+
+        String source = "let (a, b) = (5, 3) in let (c, d) = (8, 11) in a + b + c + d";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 27);
+    }
+
+    @Test
+    public void tupleAndFunctions1(){
+
+        String source = "let f = fun p -> (let (x, y) = p in x + y) in f (1, 3)";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 4);
+    }
+
+    // unpack a tuple that is returned?
+    @Test
+    public void tupleAndFunctions2(){
+
+        String source = "let f = (fun x -> (1, 3)) in let (a, b) = f 0 in a + b";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 4);
+    }
+
+    @Test
     public void testFunctionApplication1(){
 
         String source = "let a = 17 in let f = fun b -> a + b in f 42";
