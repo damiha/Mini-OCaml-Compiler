@@ -36,6 +36,18 @@ Slide 2
 GetBasic
 ```
 
+## How to try it out yourself?
+
+```
+String source = "YOUR CODE HERE";
+
+Runner runner = new Runner();
+
+System.out.println(runner.getOutput(source));
+```
+
+**NOTE:** To inspect the internal state of the virtual machine, you can set its attribute ```printDebug = true```
+
 ## What does the language support?
 
 #### Let expressions
