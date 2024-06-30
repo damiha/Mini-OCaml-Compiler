@@ -114,6 +114,48 @@ public class BehaviorTest {
     }
 
     @Test
+    public void testNot1(){
+
+        // True and False
+        String source = "!(28 == 28)";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testNot2(){
+
+        String source = "!(28 == 29)";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testUnMinus1(){
+
+        // True and False
+        String source = "(-5 == -2 - 4)";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testUnMinus2(){
+
+        String source = "(-5 == -2 - 3)";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
     public void testMod(){
 
         String source = "29 % 3";

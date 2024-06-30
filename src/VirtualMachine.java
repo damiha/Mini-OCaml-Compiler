@@ -390,6 +390,12 @@ public class VirtualMachine {
             else if(instruction instanceof Instr.Greater){
                 executeBinOp(BinaryOperator.GREATER);
             }
+            else if(instruction instanceof Instr.Negate){
+                stack[stackPointer] = toInt(!toBool(stack[stackPointer]));
+            }
+            else if(instruction instanceof Instr.FlipSign){
+                stack[stackPointer] = -stack[stackPointer];
+            }
             else{
                 throw new RuntimeException(String.format("Instruction '%s' not supported.", instruction));
             }

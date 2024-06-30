@@ -10,7 +10,6 @@ public enum BinaryOperator {
     EQUAL, UNEQUAL,
     // done
     LEQ, GEQ,
-
     // done
     LESS, GREATER
 }

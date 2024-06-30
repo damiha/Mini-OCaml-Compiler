@@ -332,20 +332,6 @@ public class Parser {
         return expr;
     }
 
-    /*
-    private Expr cons(){
-        Expr expr = unary();
-
-        while(match(TokenType.DOUBLE_COLON)){
-
-            Expr rightHandSide = unary();
-            expr = new Expr.Cons(expr, rightHandSide);
-        }
-
-        return expr;
-    }
-    */
-
     private Expr cons() {
         Expr expr = unary();
 

@@ -312,6 +312,20 @@ public class Instr {
         }
     }
 
+    static class Negate extends Instr {
+        @Override
+        public String toString(){
+            return "Negate";
+        }
+    }
+
+    static class FlipSign extends Instr {
+        @Override
+        public String toString(){
+            return "FlipSign";
+        }
+    }
+
     static class Greater extends Instr {
         @Override
         public String toString(){

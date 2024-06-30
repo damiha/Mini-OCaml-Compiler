@@ -275,7 +275,25 @@ public class Compiler implements Expr.Visitor<Code>{
 
     @Override
     public Code visitUnOp(Expr.UnOp unOp, GenerationMode mode) {
-        return null;
+        Code code = new Code();
+
+        code.addCode(codeB(unOp.expr));
+
+        switch(unOp.operator){
+            case NOT:
+                code.addInstruction(new Instr.Negate(), stackDistance);
+                break;
+            case MINUS:
+                code.addInstruction(new Instr.FlipSign(), stackDistance);
+                break;
+            default:
+                throw new RuntimeException(String.format("Unary operator '%s' not supported", unOp.operator));
+        }
+
+        // is fundamentally a codeB operation
+        addFallBackForCodeV(code, mode);
+
+        return code;
     }
 
     @Override
