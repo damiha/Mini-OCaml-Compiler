@@ -175,6 +175,70 @@ public class BehaviorTest {
     }
 
     @Test
+    public void testConcat(){
+
+        String source = "let rec concat = (fun l1 l2 -> match l1 with [] -> l2 | h::t -> h :: (concat t l2)) in concat (1::2::[]) (3::4::[])";
+
+        Runner runner = new Runner();
+
+        assertEquals("1::2::3::4::[]", runner.getOutput(source));
+    }
+
+    @Test
+    public void testRev(){
+
+        String source = """
+                let rec app = (fun x l -> match l with [] -> x::[] | h::t -> h::(app x t)) in
+                let rec rev = (fun l -> match l with [] -> [] | h :: t -> app h (rev t)) in
+                rev (1::2::3::[])
+                """;
+
+        Runner runner = new Runner();
+
+        assertEquals("3::2::1::[]", runner.getOutput(source));
+    }
+
+    @Test
+    public void testInsert(){
+
+        String source = """
+                let rec insert = (fun x l -> match l with [] -> x::[] | h :: t -> (if x <= h then x::h::t else h::(insert x t)))
+                in insert 3 (1::4::7::[])
+                """;
+
+        Runner runner = new Runner();
+
+        assertEquals("1::3::4::7::[]", runner.getOutput(source));
+    }
+
+    @Test
+    public void testInsort(){
+
+        String source = """
+                let rec insert = (fun x l -> match l with [] -> x::[] | h :: t -> (if x <= h then x::h::t else h::(insert x t))) in
+                let rec insort = (fun l -> match l with [] -> [] | h :: t -> insert h (insort t)) in
+                insort (1::5::3::4::2::[])
+                """;
+
+        Runner runner = new Runner();
+
+        assertEquals("1::2::3::4::5::[]", runner.getOutput(source));
+    }
+
+    @Test
+    public void testFibonacci(){
+
+        String source = """
+                let rec fib = fun n -> if n == 0 then 0 else if n == 1 then 1 else (fib (n-1) + fib (n-2))
+                in fib 11
+                """;
+
+        Runner runner = new Runner();
+
+        assertEquals("89", runner.getOutput(source));
+    }
+
+    @Test
     public void tupleUnpacking1(){
 
         String source = "let (a, b) = (5, 3) in a + b";
