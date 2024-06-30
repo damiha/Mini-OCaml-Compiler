@@ -92,6 +92,38 @@ public class BehaviorTest {
         assertEquals("1::2::3::[]", runner.getOutput(source));
     }
 
+    // under supply and lists
+    @Test
+    public void testList6(){
+
+        String source = "let f = (fun x y -> x::y::[]) in let first_one = (fun a -> f 1 a) in first_one 5";
+
+        Runner runner = new Runner();
+
+        assertEquals("1::5::[]", runner.getOutput(source));
+    }
+
+    @Test
+    public void testList6_1(){
+
+        String source = "let f = (fun x y -> x::y::[]) in let last_one = (fun a -> f a 1) in last_one 5";
+
+        Runner runner = new Runner();
+
+        assertEquals("5::1::[]", runner.getOutput(source));
+    }
+
+    // over supply and lists
+    @Test
+    public void testList6_2(){
+
+        String source = "let f = (fun x -> fun y z -> x :: y :: z :: []) in f 1 2 3";
+
+        Runner runner = new Runner();
+
+        assertEquals("1::2::3::[]", runner.getOutput(source));
+    }
+
     @Test
     public void tupleUnpacking1(){
 
@@ -138,6 +170,20 @@ public class BehaviorTest {
         int result = valueRetriever.retrieveValue();
 
         assertEquals(result, 4);
+    }
+
+    // return functions as tuples?
+    @Test
+    public void tupleAndFunctions3(){
+
+        String source = "let (f1, f2) = (fun x -> x + 1, fun y -> y + 2) in (f1 2)  + (f2 3)";
+
+        ValueRetriever valueRetriever = new ValueRetriever(source);
+
+        int result = valueRetriever.retrieveValue();
+
+        // (2 + 1) + (3 + 2)
+        assertEquals(result, 8);
     }
 
     @Test

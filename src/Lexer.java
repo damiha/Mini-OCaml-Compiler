@@ -193,7 +193,7 @@ public class Lexer {
     }
 
     private boolean isAlpha(char c){
-        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || (c == '_');
     }
 
     private String getLexeme(){
