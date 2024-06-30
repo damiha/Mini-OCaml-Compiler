@@ -22,7 +22,7 @@ public class VirtualMachine {
 
     boolean isRunning;
 
-    boolean printDebug = true;
+    boolean printDebug = false;
 
     boolean showHeapContent = true;
 
