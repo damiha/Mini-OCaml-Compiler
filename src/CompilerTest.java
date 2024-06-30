@@ -304,16 +304,16 @@ public class CompilerTest {
         expected.addInstruction(new Instr.LoadC(1), 1);
         expected.addInstruction(new Instr.LessThanOrEqual(), 2);
         expected.addInstruction(new Instr.JumpZ("_2"), 1);
-        expected.addInstruction(new Instr.PushLoc(1), 1);
+        expected.addInstruction(new Instr.PushLoc(1), 0);
         // jump over else
-        expected.addInstruction(new Instr.Jump("_3"), 2);
+        expected.addInstruction(new Instr.Jump("_3"), 1);
 
         // else branch
-        expected.addInstruction(new Instr.Mark("_4"), "_2", 2);
+        expected.addInstruction(new Instr.Mark("_4"), "_2", 1);
 
         // y - 1
-        expected.addInstruction(new Instr.PushLoc(6), 5);
-        expected.addInstruction(new Instr.GetBasic(), 6);
+        expected.addInstruction(new Instr.PushLoc(5), 4);
+        expected.addInstruction(new Instr.GetBasic(), 5);
         expected.addInstruction(new Instr.LoadC(1), 6);
         expected.addInstruction(new Instr.Sub(), 7);
         expected.addInstruction(new Instr.MakeBasic(), 6);

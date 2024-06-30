@@ -45,6 +45,8 @@ public class VirtualMachine {
             this.code[i] = code.instructions.get(i);
         }
 
+
+
         jumpTable = code.jumpTable;
 
         instructionRegister = null;
@@ -153,6 +155,9 @@ public class VirtualMachine {
             else if(instruction instanceof Instr.LessThanOrEqual){
                 executeBinOp(BinaryOperator.LEQ);
             }
+            else if(instruction instanceof Instr.Equal){
+                executeBinOp(BinaryOperator.EQUAL);
+            }
             else if(instruction instanceof Instr.MakeFunVal){
                 // top most value is the global vector
                 int globalVectorAddress = stack[stackPointer];
@@ -202,16 +207,16 @@ public class VirtualMachine {
                 // below the old frame pointer
                 // below the old global vector
                 stack[stackPointer + 1] = globalPointer;
-                stackTypes[stackPointer + 1] = StackType.H;
+                stackTypes[stackPointer + 1] = StackType.GP;
 
                 stack[stackPointer + 2] = framePointer;
-                stackTypes[stackPointer + 2] = StackType.V;
+                stackTypes[stackPointer + 2] = StackType.FP;
 
                 String jumpLabelAfterReturn = ((Instr.Mark) instruction).jumpLabel;
                 int jumpAddressAfterReturn = jumpTable.get(jumpLabelAfterReturn);
 
                 stack[stackPointer + 3] = jumpAddressAfterReturn;
-                stackTypes[stackPointer + 3] = StackType.V;
+                stackTypes[stackPointer + 3] = StackType.PC;
 
                 framePointer = stackPointer + 3;
                 stackPointer += 3;
@@ -269,6 +274,9 @@ public class VirtualMachine {
             }
             else if(instruction instanceof Instr.Add){
                 executeBinOp(BinaryOperator.PLUS);
+            }
+            else if(instruction instanceof Instr.Sub){
+                executeBinOp(BinaryOperator.MINUS);
             }
             else{
                 throw new RuntimeException(String.format("Instruction '%s' not supported.", instruction));
@@ -413,6 +421,7 @@ public class VirtualMachine {
             case MUL -> leftOperand * rightOperand;
             case MINUS -> leftOperand - rightOperand;
             case LEQ -> toInt(leftOperand <= rightOperand);
+            case EQUAL -> toInt(leftOperand == rightOperand);
             default -> throw new RuntimeException("Operator " + binaryOperator + " not implemented.");
         };
 

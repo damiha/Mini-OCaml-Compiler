@@ -73,16 +73,29 @@ public class BehaviorTest {
     }
 
     @Test
-    public void testLet2(){
+    public void testLetRec01(){
 
         // this should calculate the factorial function
-        String source = "let rec f = fun x y -> if y <= 5 then x else 16 in f 3 2";
+        String source = "let rec a = 3 and b = 5 in a + b";
 
         Runner runner = new Runner(source);
 
         int result = runner.run();
 
-        assertEquals(3, result);
+        assertEquals(8, result);
+    }
+
+    @Test
+    public void testIfAdd(){
+
+        // this should calculate the factorial function
+        String source = "let x = 3 in let y = 4 in 1 + (if x <= y then x else y) + x";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(7, result);
     }
 
     @Test
@@ -97,4 +110,18 @@ public class BehaviorTest {
 
         assertEquals(result, 6);
     }
+
+    @Test
+    public void testMutRec1(){
+
+        // this should calculate the factorial function
+        String source = "let rec even = (fun e -> if e == 0 then 1 else odd (e - 1)) and odd = (fun o -> if o == 0 then 0 else 1 - even(o - 1)) in even 77";
+
+        Runner runner = new Runner(source);
+
+        int result = runner.run();
+
+        assertEquals(result, 0);
+    }
+
 }

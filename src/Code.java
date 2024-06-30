@@ -8,11 +8,14 @@ public class Code {
     // for debugging purposes
     List<Integer> stackDistances;
 
+    List<Integer> spZeroes;
+
     int jumpLabelsIssued = 0;
 
     public Code(){
         instructions = new ArrayList<>();
         stackDistances = new ArrayList<>();
+        spZeroes = new ArrayList<>();
         jumpTable = new HashMap<>();
     }
 

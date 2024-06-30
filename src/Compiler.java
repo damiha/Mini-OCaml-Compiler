@@ -9,6 +9,8 @@ public class Compiler implements Expr.Visitor<Code>{
 
     Environment environment;
 
+    boolean addDebugInfo = true;
+
     public Compiler(){
         environment = new Environment();
     }
@@ -31,10 +33,7 @@ public class Compiler implements Expr.Visitor<Code>{
             stackDistance += 1;
         }
 
-        if(mode == GenerationMode.V){
-            // this swaps the value with the address in the heap so now stack increase
-            code.addInstruction(new Instr.MakeBasic(), stackDistance);
-        }
+        addFallBackForCodeV(code, mode);
 
         return code;
     }
@@ -46,9 +45,7 @@ public class Compiler implements Expr.Visitor<Code>{
 
         code.addCode(getVar(variable));
 
-        if(mode == GenerationMode.B){
-            code.addInstruction(new Instr.GetBasic(), stackDistance);
-        }
+        addFallBackForCodeB(code, mode);
 
         return code;
     }
@@ -95,7 +92,13 @@ public class Compiler implements Expr.Visitor<Code>{
         Pair<Visibility, Integer> pair = environment.get(variable.varName);
 
         if(pair.first() == Visibility.L){
-            code.addInstruction(new Instr.PushLoc(stackDistance - pair.second()), stackDistance);
+            code.addInstruction(
+                    new Instr.PushLoc(
+                            stackDistance - pair.second(),
+                            addDebugInfo ? environment.deepCopy() : null,
+                            addDebugInfo ? stackDistance : -1
+                    ),
+                    stackDistance);
         }
         else{
             code.addInstruction(new Instr.PushGlob(pair.second()), stackDistance);
@@ -151,9 +154,7 @@ public class Compiler implements Expr.Visitor<Code>{
 
         environment = previous;
 
-        if(mode == GenerationMode.B){
-            code.addInstruction(new Instr.GetBasic(), stackDistance);
-        }
+        addFallBackForCodeB(code, mode);
 
         return code;
     }
@@ -170,9 +171,10 @@ public class Compiler implements Expr.Visitor<Code>{
 
         int n = letRec.parallelDefs.size();
 
-        int prevStackDistance = stackDistance;
+        environment.insertParallelDefs(letRec.parallelDefs, Visibility.L, stackDistance + 1, Index.INCREASING);
 
         code.addInstruction(new Instr.Alloc(n), stackDistance);
+        stackDistance += n;
 
         Environment previous = environment;
         environment = environment.deepCopy();
@@ -180,30 +182,28 @@ public class Compiler implements Expr.Visitor<Code>{
         // since everything is defined 'in parallel', all variables
         // are available at once
 
-        environment.insertParallelDefs(letRec.parallelDefs, Visibility.L, prevStackDistance + 1, Index.INCREASING);
-
         // let evaluates from left to right
         int i = 0;
         for(Pair<Expr, Expr> p : letRec.parallelDefs){
 
-            stackDistance = prevStackDistance + n;
-
             code.addCode(codeV(p.second()));
 
             code.addInstruction(new Instr.Rewrite(n - i), stackDistance);
+
+            // rewrite also modifies the stack pointer?
+            stackDistance -= 1;
+            i++;
         }
 
-        stackDistance = prevStackDistance + n;
         code.addCode(codeV(letRec.inExpr));
 
         // we don't need the prev stack distance stuff
         addSlide(code, n);
+        stackDistance -= n;
 
         environment = previous;
 
-        if(mode == GenerationMode.B){
-            code.addInstruction(new Instr.GetBasic(), stackDistance);
-        }
+        addFallBackForCodeB(code, mode);
 
         return code;
     }
@@ -233,6 +233,12 @@ public class Compiler implements Expr.Visitor<Code>{
             case BinaryOperator.LEQ:
                 code.addInstruction(new Instr.LessThanOrEqual(), stackDistance);
                 break;
+            case BinaryOperator.GEQ:
+                code.addInstruction(new Instr.GreaterOrEqual(), stackDistance);
+                break;
+            case BinaryOperator.EQUAL:
+                code.addInstruction(new Instr.Equal(), stackDistance);
+                break;
             case BinaryOperator.MINUS:
                 code.addInstruction(new Instr.Sub(), stackDistance);
                 break;
@@ -241,15 +247,15 @@ public class Compiler implements Expr.Visitor<Code>{
         // one operator is consumed
         stackDistance -= 1;
 
-        if(mode == GenerationMode.V){
-            code.addInstruction(new Instr.MakeBasic(), stackDistance);
-        }
+        addFallBackForCodeV(code, mode);
 
         return code;
     }
 
     @Override
     public Code visitFunctionDefinition(Expr.FunctionDefinition functionDefinition, GenerationMode mode) {
+
+        checkHasNoCodeB(mode, "A function definition returns a function, not a basic value");
 
         Code code = new Code();
 
@@ -264,8 +270,6 @@ public class Compiler implements Expr.Visitor<Code>{
         functionEnvironment.insert(functionDefinition.variables, Visibility.L, 0, Index.DECREASING);
 
         Set<Expr> freeVariables = free(functionDefinition.rightHandSide, functionEnvironment);
-
-        int globVars = 0;
 
         functionEnvironment.insert(freeVariables, Visibility.G, 0, Index.INCREASING);
 
@@ -418,6 +422,8 @@ public class Compiler implements Expr.Visitor<Code>{
 
         code.setJumpLabelAtEnd(continueAfterFunctionCall);
 
+        addFallBackForCodeB(code, mode);
+
         return code;
     }
 
@@ -430,15 +436,46 @@ public class Compiler implements Expr.Visitor<Code>{
 
         code.addCode(codeB(ifExpr.condition));
 
+        int stackDistBeforeConditional = stackDistance;
+
         code.addInstruction(new Instr.JumpZ(jumpOverIfBranch), stackDistance);
+        stackDistance -= 1;
+
+        int prevStackDistance = stackDistance;
 
         code.addCode(codeV(ifExpr.ifBranchExpr));
         code.addInstruction(new Instr.Jump(jumpOverElseBranch), stackDistance);
+
+        // we have to reset because only if or else is going to influence the stack distance?
+        stackDistance = prevStackDistance;
 
         code.addCode(codeV(ifExpr.elseBranchExpr), jumpOverIfBranch);
 
         code.setJumpLabelAtEnd(jumpOverElseBranch);
 
+        stackDistance = stackDistBeforeConditional;
+
+        // IMPORTANT (this could have done better by using codeB in both branches)
+        addFallBackForCodeB(code, mode);
+
         return code;
+    }
+
+    private void checkHasNoCodeB(GenerationMode mode, String message){
+        if(mode == GenerationMode.B){
+            throw new RuntimeException(message);
+        }
+    }
+
+    private void addFallBackForCodeB(Code code, GenerationMode mode){
+        if(mode == GenerationMode.B){
+            code.addInstruction(new Instr.GetBasic(), stackDistance);
+        }
+    }
+
+    private void addFallBackForCodeV(Code code, GenerationMode mode){
+        if(mode == GenerationMode.V){
+            code.addInstruction(new Instr.MakeBasic(), stackDistance);
+        }
     }
 }

@@ -46,6 +46,15 @@ public class Instr {
     static class PushLoc extends Instr {
         int relativeAddress;
 
+        Environment environment;
+        int stackDistance;
+
+        public PushLoc(int relativeAddress, Environment environment, int stackDistance){
+            this.relativeAddress = relativeAddress;
+            this.environment = environment;
+            this.stackDistance = stackDistance;
+        }
+
         public PushLoc(int relativeAddress){
             this.relativeAddress = relativeAddress;
         }
@@ -240,6 +249,20 @@ public class Instr {
         @Override
         public String toString(){
             return "LessThanOrEqual";
+        }
+    }
+
+    static class GreaterOrEqual extends Instr {
+        @Override
+        public String toString(){
+            return "GreaterOrEqual";
+        }
+    }
+
+    static class Equal extends Instr {
+        @Override
+        public String toString(){
+            return "Equal";
         }
     }
 
