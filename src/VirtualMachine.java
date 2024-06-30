@@ -46,8 +46,6 @@ public class VirtualMachine {
             this.code[i] = code.instructions.get(i);
         }
 
-
-
         jumpTable = code.jumpTable;
 
         instructionRegister = null;
@@ -272,6 +270,57 @@ public class VirtualMachine {
             }
             else if(instruction instanceof Instr.Mul){
                 executeBinOp(BinaryOperator.MUL);
+            }
+            else if(instruction instanceof Instr.Nil){
+                HeapElement nilElement = new HeapElement.FList();
+                stack[++stackPointer] = heap.insert(nilElement);
+                stackTypes[stackPointer] = StackType.H;
+            }
+            else if(instruction instanceof Instr.TList){
+
+                // address to list to match is on top of the stack
+                int heapAddress = stack[stackPointer];
+
+                HeapElement element = heap.get(heapAddress);
+
+                if(!(element instanceof HeapElement.FList)){
+                    throw new RuntimeException("match expression expects a list");
+                }
+
+                HeapElement.FList list = (HeapElement.FList) element;
+
+                if(list.listType == ListType.NIL){
+                    // we just consume the address to the Nil list and return
+                    stackPointer--;
+                }
+                else{
+                    // Cons case
+                    int headAddress = list.heapAddressHead;
+                    int tailAddress = list.heapAddressListTail;
+
+                    // we have l, t in the stack
+                    // l should be where stack pointer currently is
+                    stack[stackPointer] = tailAddress;
+                    stack[stackPointer + 1] = headAddress;
+
+                    stackPointer++;
+
+                    // TList also encompasses a jump statement
+                    programCounter = jumpTable.get(((Instr.TList) instruction).jumpLabel);
+                }
+            }
+            else if(instruction instanceof Instr.Cons){
+
+
+                // tail is on top of the stack (look at compiler)
+                int heapAddressListTail = stack[stackPointer];
+                int heapAddressHead = stack[stackPointer - 1];
+
+                // head is on bottom
+                HeapElement consElement = new HeapElement.FList(heapAddressHead, heapAddressListTail, heap);
+
+                stack[--stackPointer] = heap.insert(consElement);
+                stackTypes[stackPointer] = StackType.H;
             }
             else if(instruction instanceof Instr.Add){
                 executeBinOp(BinaryOperator.PLUS);

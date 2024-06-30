@@ -28,6 +28,8 @@ public class Lexer {
         keywordToToken.put("rec", TokenType.REC);
         keywordToToken.put("fun", TokenType.FUN);
         keywordToToken.put("and", TokenType.AND);
+        keywordToToken.put("match", TokenType.MATCH);
+        keywordToToken.put("with", TokenType.WITH);
     }
 
     public List<Token> getTokens(){
@@ -56,6 +58,14 @@ public class Lexer {
                     break;
                 case '#':
                     addToken(TokenType.HASH);
+                    break;
+                case ':':
+                    if(match(':')){
+                        addToken(TokenType.DOUBLE_COLON);
+                    }
+                    else{
+                        throw new RuntimeException(":: needs two :");
+                    }
                     break;
                 case ')':
                     addToken(TokenType.RIGHT_PAREN);
@@ -132,7 +142,7 @@ public class Lexer {
                         addToken(TokenType.DOUBLE_PIPE);
                     }
                     else{
-                        throw new RuntimeException("Single | is not defined");
+                        addToken(TokenType.PIPE);
                     }
                     break;
             }
@@ -185,7 +195,7 @@ public class Lexer {
     }
 
     private boolean isAlpha(char c){
-        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || (c == '_');
     }
 
     private String getLexeme(){
