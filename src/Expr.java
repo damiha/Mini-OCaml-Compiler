@@ -277,6 +277,29 @@ public abstract class Expr {
         }
     }
 
+    static class Match extends Expr {
+        Expr matchThis;
+        Expr matchWithNil;
+        Expr matchWithCons;
+
+        public Match(Expr mathThis, Expr matchWithNil, Expr matchWithCons){
+            this.matchThis = mathThis;
+            this.matchWithNil = matchWithNil;
+            this.matchWithCons = matchWithCons;
+        }
+
+
+        @Override
+        <T> T accept(Visitor<T> visitor, GenerationMode mode) {
+            return visitor.visitMatchExpr(this, mode);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            throw new RuntimeException("'equals not supported for match");
+        }
+    }
+
     static class Cons extends Expr{
 
         Expr head;
@@ -388,5 +411,6 @@ public abstract class Expr {
         T visitTupleAccess(TupleAccess tupleAccess, GenerationMode mode);
         T visitNilExpr(Nil nil, GenerationMode mode);
         T visitConsExpr(Cons cons, GenerationMode mode);
+        T visitMatchExpr(Match match, GenerationMode mode);
     }
 }

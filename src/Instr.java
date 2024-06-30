@@ -279,6 +279,19 @@ public class Instr {
         }
     }
 
+    static class TList extends Instr{
+        String jumpLabel;
+
+        public TList(String jumpLabel){
+            this.jumpLabel = jumpLabel;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("TList %s", jumpLabel);
+        }
+    }
+
     static class Nil extends Instr{
 
         @Override

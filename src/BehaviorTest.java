@@ -125,6 +125,56 @@ public class BehaviorTest {
     }
 
     @Test
+    public void testMatchExpression1(){
+
+        String source = "match [] with [] -> 1 | h :: t -> 2";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testMatchExpression2(){
+
+        String source = "match 1::[] with [] -> 1 | h :: t -> 2";
+
+        Runner runner = new Runner();
+
+        assertEquals("2", runner.getOutput(source));
+    }
+
+    @Test
+    public void testMatchExpression3(){
+
+        String source = "match 15::[] with [] -> 1 | h :: t -> h";
+
+        Runner runner = new Runner();
+
+        assertEquals("15", runner.getOutput(source));
+    }
+
+    @Test
+    public void testMatchExpression4(){
+
+        String source = "match 15::(2::[]) with [] -> 1 | h :: t -> 3::t";
+
+        Runner runner = new Runner();
+
+        assertEquals("3::2::[]", runner.getOutput(source));
+    }
+
+    @Test
+    public void testMatchExpression5(){
+
+        String source = "let rec app = (fun x l -> match l with [] -> x::[] | h::t -> h::(app x t)) in app 5 (1::2::[])";
+
+        Runner runner = new Runner();
+
+        assertEquals("1::2::5::[]", runner.getOutput(source));
+    }
+
+    @Test
     public void tupleUnpacking1(){
 
         String source = "let (a, b) = (5, 3) in a + b";

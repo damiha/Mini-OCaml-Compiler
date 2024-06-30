@@ -95,9 +95,45 @@ public class Parser {
             }
             return simpleLet();
         }
+        if(match(TokenType.MATCH)){
+            return matchExpr();
+        }
         else{
             return ifExpr();
         }
+    }
+
+    private Expr matchExpr(){
+        // match has already been consumed
+        Expr toMatch = expression();
+
+        consume(TokenType.WITH, "'match' expression missing 'with'");
+
+        consume(TokenType.LEFT_BRACKET, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+        consume(TokenType.RIGHT_BRACKET, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+        consume(TokenType.ARROW, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+
+        Expr matchWithNil = expression();
+
+        consume(TokenType.PIPE, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+        Token h = consume(TokenType.IDENTIFIER, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+
+        if(!h.lexeme.equals("h")){
+            throw new RuntimeException("must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+        }
+        consume(TokenType.DOUBLE_COLON, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+
+        Token t = consume(TokenType.IDENTIFIER, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+
+        if(!t.lexeme.equals("t")){
+            throw new RuntimeException("must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+        }
+
+        consume(TokenType.ARROW, "must have the form 'match e_0 with [] -> e_1 | h::t -> e_2'");
+
+        Expr matchWithCons = expression();
+
+        return new Expr.Match(toMatch, matchWithNil, matchWithCons);
     }
 
     // let already processed
@@ -296,12 +332,25 @@ public class Parser {
         return expr;
     }
 
+    /*
     private Expr cons(){
         Expr expr = unary();
 
         while(match(TokenType.DOUBLE_COLON)){
 
             Expr rightHandSide = unary();
+            expr = new Expr.Cons(expr, rightHandSide);
+        }
+
+        return expr;
+    }
+    */
+
+    private Expr cons() {
+        Expr expr = unary();
+
+        if (match(TokenType.DOUBLE_COLON)) {
+            Expr rightHandSide = cons();  // Recursively call cons for right associativity
             expr = new Expr.Cons(expr, rightHandSide);
         }
 

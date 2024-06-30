@@ -3,6 +3,7 @@ public enum TokenType {
     COMMA, MINUS, PLUS, SLASH, STAR,
     LEFT_BRACKET, RIGHT_BRACKET,
     HASH,
+    PIPE,
 
     // One or two character tokens.
     BANG, BANG_EQUAL,
@@ -20,6 +21,7 @@ public enum TokenType {
     // Keywords.
     IF, THEN, ELSE,
     LET, IN, REC, FUN, AND,  // used for let rec y_1 = e_1 and ...
+    MATCH, WITH,
 
     EOF
 }

@@ -74,6 +74,10 @@ public class Code {
                 String oldLabel =  ((Instr.MakeFunVal) instr).jumpLabel;
                 ((Instr.MakeFunVal) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
             }
+            else if(instr instanceof Instr.TList){
+                String oldLabel =  ((Instr.TList) instr).jumpLabel;
+                ((Instr.TList) instr).jumpLabel = oldToNewJumpLabels.get(oldLabel);
+            }
         }
 
         jumpLabelsIssued += other.jumpLabelsIssued;

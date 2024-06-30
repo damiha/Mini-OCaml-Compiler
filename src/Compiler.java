@@ -99,6 +99,50 @@ public class Compiler implements Expr.Visitor<Code>{
         return code;
     }
 
+    @Override
+    public Code visitMatchExpr(Expr.Match match, GenerationMode mode) {
+        Code code = new Code();
+
+        code.addCode(codeV(match.matchThis));
+
+        String jumpOverNilMatch = code.getNewJumpLabel();
+        String jumpOverConsMatch = code.getNewJumpLabel();
+
+        code.addInstruction(new Instr.TList(jumpOverNilMatch), stackDistance);
+        stackDistance--;
+
+        int stackDistanceBeforeBranching = stackDistance;
+
+        code.addCode(codeV(match.matchWithNil));
+
+        code.addInstruction(new Instr.Jump(jumpOverConsMatch), stackDistance);
+
+        stackDistance = stackDistanceBeforeBranching;
+
+        code.setJumpLabelAtEnd(jumpOverNilMatch);
+
+        // we need to add the special variables h and t so the function can refer to them
+        Environment previous = environment;
+        environment = environment.deepCopy();
+
+        environment.insert(
+                List.of(new Expr.Variable("t"), new Expr.Variable("h")),
+                Visibility.L, stackDistance + 1, Index.INCREASING);
+
+        stackDistance += 2;
+
+        code.addCode(codeV(match.matchWithCons));
+
+        code.addInstruction(new Instr.Slide(2), stackDistance);
+        stackDistance -= 2;
+
+        environment = previous;
+
+        code.setJumpLabelAtEnd(jumpOverConsMatch);
+
+        return code;
+    }
+
     private void addMakeVec(Code code, int k){
         code.addInstruction(new Instr.MakeVec(k), stackDistance);
 
@@ -359,6 +403,22 @@ public class Compiler implements Expr.Visitor<Code>{
             freeVarsHead.addAll(freeVarsTail);
 
             return freeVarsHead;
+        }
+        if(expr instanceof Expr.Match){
+            Set<Expr> freeVarsCond = free(((Expr.Match) expr).matchThis, surroundingEnvironment);
+            Set<Expr> freeVarsNilMatch = free(((Expr.Match) expr).matchWithNil, surroundingEnvironment);
+
+            // add h and t so they don't come up as free variables
+            Environment surroundingCons = surroundingEnvironment.deepCopy();
+            surroundingCons.insert(List.of(new Expr.Variable("h"), new Expr.Variable("t")), Visibility.L, 0, Index.INCREASING);
+
+            Set<Expr> freeVarsConsMatch = free(((Expr.Match) expr).matchWithCons, surroundingCons);
+
+
+            freeVarsCond.addAll(freeVarsNilMatch);
+            freeVarsCond.addAll(freeVarsConsMatch);
+
+            return freeVarsCond;
         }
         else if(expr instanceof Expr.UnOp){
             return free(((Expr.UnOp)expr).expr, surroundingEnvironment);

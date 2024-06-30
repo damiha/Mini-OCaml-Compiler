@@ -28,6 +28,8 @@ public class Lexer {
         keywordToToken.put("rec", TokenType.REC);
         keywordToToken.put("fun", TokenType.FUN);
         keywordToToken.put("and", TokenType.AND);
+        keywordToToken.put("match", TokenType.MATCH);
+        keywordToToken.put("with", TokenType.WITH);
     }
 
     public List<Token> getTokens(){
@@ -140,7 +142,7 @@ public class Lexer {
                         addToken(TokenType.DOUBLE_PIPE);
                     }
                     else{
-                        throw new RuntimeException("Single | is not defined");
+                        addToken(TokenType.PIPE);
                     }
                     break;
             }
