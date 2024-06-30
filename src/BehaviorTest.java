@@ -19,6 +19,154 @@ public class BehaviorTest {
     }
 
     @Test
+    public void testAnd1(){
+
+        // True and False
+        String source = "(28 && (0 == 1))";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testAnd2(){
+
+        // True and False
+        String source = "((0 == 0) && 29)";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testGeq1(){
+
+        String source = "27 >= 27";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testGeq2(){
+
+        // True and False
+        String source = "26 >= 27";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testLess1(){
+
+        String source = "27 < 28";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testLess2(){
+
+        // True and False
+        String source = "27 < 27";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testGreater1(){
+
+        String source = "28 > 27";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testGreater2(){
+
+        // True and False
+        String source = "28 > 28";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testDiv(){
+
+        String source = "28 / 7";
+
+        Runner runner = new Runner();
+
+        assertEquals("4", runner.getOutput(source));
+    }
+
+    @Test
+    public void testMod(){
+
+        String source = "29 % 3";
+
+        Runner runner = new Runner();
+
+        assertEquals("2", runner.getOutput(source));
+    }
+
+    @Test
+    public void testUnequal1(){
+
+        String source = "29 != 3";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
+    public void testUnequal2(){
+
+        // True and False
+        String source = "3 != 3";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testOr1(){
+
+        // False or False
+        String source = "((28 == 29) || (0 == 1))";
+
+        Runner runner = new Runner();
+
+        assertEquals("0", runner.getOutput(source));
+    }
+
+    @Test
+    public void testOr2(){
+
+        // False or true
+        String source = "((0 == 1) || 29)";
+
+        Runner runner = new Runner();
+
+        assertEquals("1", runner.getOutput(source));
+    }
+
+    @Test
     public void testList1(){
 
         String source = "[]";
@@ -27,6 +175,8 @@ public class BehaviorTest {
 
         assertEquals(runner.getOutput(source), "[]");
     }
+
+
 
     @Test
     public void testList2(){

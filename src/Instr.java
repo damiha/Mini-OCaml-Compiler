@@ -259,10 +259,63 @@ public class Instr {
         }
     }
 
+    static class And extends Instr{
+
+        @Override
+        public String toString(){
+            return "And";
+        }
+    }
+
+    static class Or extends Instr{
+
+        @Override
+        public String toString(){
+            return "Or";
+        }
+    }
+
+    static class Div extends Instr{
+
+        @Override
+        public String toString(){
+            return "Div";
+        }
+    }
+
+    static class Mod extends Instr{
+
+        @Override
+        public String toString(){
+            return "Mod";
+        }
+    }
+
     static class Equal extends Instr {
         @Override
         public String toString(){
             return "Equal";
+        }
+    }
+
+    static class UnEqual extends Instr {
+        @Override
+        public String toString(){
+            return "UnEqual";
+        }
+    }
+
+    static class Less extends Instr {
+        @Override
+        public String toString(){
+            return "Less";
+        }
+    }
+
+    static class Greater extends Instr {
+        @Override
+        public String toString(){
+            return "Greater";
         }
     }
 

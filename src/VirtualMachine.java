@@ -366,6 +366,30 @@ public class VirtualMachine {
             else if(instruction instanceof Instr.Sub){
                 executeBinOp(BinaryOperator.MINUS);
             }
+            else if(instruction instanceof Instr.And){
+                executeBinOp(BinaryOperator.AND);
+            }
+            else if(instruction instanceof Instr.Or){
+                executeBinOp(BinaryOperator.OR);
+            }
+            else if(instruction instanceof Instr.UnEqual){
+                executeBinOp(BinaryOperator.UNEQUAL);
+            }
+            else if(instruction instanceof Instr.Div){
+                executeBinOp(BinaryOperator.DIV);
+            }
+            else if(instruction instanceof Instr.Mod){
+                executeBinOp(BinaryOperator.MOD);
+            }
+            else if(instruction instanceof Instr.GreaterOrEqual){
+                executeBinOp(BinaryOperator.GEQ);
+            }
+            else if(instruction instanceof Instr.Less){
+                executeBinOp(BinaryOperator.LESS);
+            }
+            else if(instruction instanceof Instr.Greater){
+                executeBinOp(BinaryOperator.GREATER);
+            }
             else{
                 throw new RuntimeException(String.format("Instruction '%s' not supported.", instruction));
             }
@@ -508,12 +532,24 @@ public class VirtualMachine {
             case PLUS -> leftOperand + rightOperand;
             case MUL -> leftOperand * rightOperand;
             case MINUS -> leftOperand - rightOperand;
+            case DIV -> leftOperand / rightOperand;
+            case MOD -> leftOperand % rightOperand;
             case LEQ -> toInt(leftOperand <= rightOperand);
+            case GEQ -> toInt(leftOperand >= rightOperand);
             case EQUAL -> toInt(leftOperand == rightOperand);
+            case UNEQUAL -> toInt(leftOperand != rightOperand);
+            case LESS -> toInt(leftOperand < rightOperand);
+            case GREATER -> toInt(leftOperand > rightOperand);
+            case AND -> toInt(toBool (leftOperand) && toBool(rightOperand));
+            case OR -> toInt(toBool(leftOperand) || toBool(rightOperand));
             default -> throw new RuntimeException("Operator " + binaryOperator + " not implemented.");
         };
 
         stack[stackPointer] = res;
+    }
+
+    private boolean toBool(int n){
+        return n != 0;
     }
 
     private int toInt(boolean val){

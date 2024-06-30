@@ -301,11 +301,32 @@ public class Compiler implements Expr.Visitor<Code>{
             case BinaryOperator.GEQ:
                 code.addInstruction(new Instr.GreaterOrEqual(), stackDistance);
                 break;
+            case BinaryOperator.LESS:
+                code.addInstruction(new Instr.Less(), stackDistance);
+                break;
+            case BinaryOperator.GREATER:
+                code.addInstruction(new Instr.Greater(), stackDistance);
+                break;
             case BinaryOperator.EQUAL:
                 code.addInstruction(new Instr.Equal(), stackDistance);
                 break;
             case BinaryOperator.MINUS:
                 code.addInstruction(new Instr.Sub(), stackDistance);
+                break;
+            case BinaryOperator.AND:
+                code.addInstruction(new Instr.And(), stackDistance);
+                break;
+            case BinaryOperator.OR:
+                code.addInstruction(new Instr.Or(), stackDistance);
+                break;
+            case BinaryOperator.DIV:
+                code.addInstruction(new Instr.Div(), stackDistance);
+                break;
+            case BinaryOperator.MOD:
+                code.addInstruction(new Instr.Mod(), stackDistance);
+                break;
+            case BinaryOperator.UNEQUAL:
+                code.addInstruction(new Instr.UnEqual(), stackDistance);
                 break;
             default:
                 throw new RuntimeException("Instruction not yet implemented.");

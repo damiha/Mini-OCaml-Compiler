@@ -313,7 +313,7 @@ public class Parser {
 
         Expr expr = cons();
 
-        while(checkTypes(TokenType.STAR, TokenType.SLASH)){
+        while(checkTypes(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)){
 
             BinaryOperator operator = null;
             if(match(TokenType.STAR)) {
