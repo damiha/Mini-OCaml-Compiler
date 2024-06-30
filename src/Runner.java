@@ -1,29 +1,25 @@
 public class Runner {
 
-    Lexer lexer;
-    Parser parser;
-    Compiler compiler;
-    VirtualMachine virtualMachine;
+    public Runner(){}
 
-    Expr parsedExpr;
-    Code compiledCode;
+    public String getOutput(String source){
 
-    public Runner(String source){
+        Lexer lexer = new Lexer(source);
 
-        lexer = new Lexer(source);
+        Parser parser = new Parser(lexer.getTokens());
 
-        parser = new Parser(lexer.getTokens());
+        Expr parsedExpr = parser.parse();
 
-        parsedExpr = parser.parse();
+        Compiler compiler = new Compiler();
 
-        compiler = new Compiler();
+        Code compiledCode = compiler.codeV(parsedExpr);
 
-        compiledCode = compiler.codeB(parsedExpr);
+        VirtualMachine virtualMachine = new VirtualMachine();
 
-        virtualMachine = new VirtualMachine();
-    }
+        virtualMachine.run(compiledCode);
 
-    public int run(){
-        return virtualMachine.run(compiledCode);
+        HeapElement finalElement = virtualMachine.heap.get(virtualMachine.stack[virtualMachine.stackPointer]);
+
+        return finalElement.getOutputRepresentation();
     }
 }

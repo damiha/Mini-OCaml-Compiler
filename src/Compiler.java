@@ -78,6 +78,27 @@ public class Compiler implements Expr.Visitor<Code>{
         return code;
     }
 
+    @Override
+    public Code visitNilExpr(Expr.Nil nil, GenerationMode mode) {
+        Code code = new Code();
+        code.addInstruction(new Instr.Nil(), stackDistance);
+        stackDistance += 1;
+        return code;
+    }
+
+    @Override
+    public Code visitConsExpr(Expr.Cons cons, GenerationMode mode) {
+        Code code = new Code();
+        code.addCode(codeV(cons.head));
+        code.addCode(codeV(cons.tail));
+        code.addInstruction(new Instr.Cons(), stackDistance);
+
+        // one operator is consumed and where other is, is now address
+        stackDistance -= 1;
+
+        return code;
+    }
+
     private void addMakeVec(Code code, int k){
         code.addInstruction(new Instr.MakeVec(k), stackDistance);
 
@@ -331,6 +352,13 @@ public class Compiler implements Expr.Visitor<Code>{
             if(!surroundingEnvironment.env.containsKey(((Expr.Variable) expr).varName)){
                 freeVars.add(expr);
             }
+        }
+        if(expr instanceof Expr.Cons){
+            Set<Expr> freeVarsHead = free(((Expr.Cons) expr).head, surroundingEnvironment);
+            Set<Expr> freeVarsTail = free(((Expr.Cons) expr).tail, surroundingEnvironment);
+            freeVarsHead.addAll(freeVarsTail);
+
+            return freeVarsHead;
         }
         else if(expr instanceof Expr.UnOp){
             return free(((Expr.UnOp)expr).expr, surroundingEnvironment);

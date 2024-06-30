@@ -12,6 +12,7 @@ public enum TokenType {
     ARROW,
     DOUBLE_AMPERSAND, DOUBLE_PIPE,
     PERCENT,
+    DOUBLE_COLON,
 
     // Literals.
     IDENTIFIER, NUMBER,

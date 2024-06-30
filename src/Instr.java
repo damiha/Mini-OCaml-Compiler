@@ -279,6 +279,22 @@ public class Instr {
         }
     }
 
+    static class Nil extends Instr{
+
+        @Override
+        public String toString(){
+            return "Nil";
+        }
+    }
+
+    static class Cons extends Instr{
+
+        @Override
+        public String toString(){
+            return "Cons";
+        }
+    }
+
     static class MakeBasic extends Instr{
 
         @Override

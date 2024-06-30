@@ -46,8 +46,6 @@ public class VirtualMachine {
             this.code[i] = code.instructions.get(i);
         }
 
-
-
         jumpTable = code.jumpTable;
 
         instructionRegister = null;
@@ -272,6 +270,24 @@ public class VirtualMachine {
             }
             else if(instruction instanceof Instr.Mul){
                 executeBinOp(BinaryOperator.MUL);
+            }
+            else if(instruction instanceof Instr.Nil){
+                HeapElement nilElement = new HeapElement.FList();
+                stack[++stackPointer] = heap.insert(nilElement);
+                stackTypes[stackPointer] = StackType.H;
+            }
+            else if(instruction instanceof Instr.Cons){
+
+
+                // tail is on top of the stack (look at compiler)
+                int heapAddressListTail = stack[stackPointer];
+                int heapAddressHead = stack[stackPointer - 1];
+
+                // head is on bottom
+                HeapElement consElement = new HeapElement.FList(heapAddressHead, heapAddressListTail, heap);
+
+                stack[--stackPointer] = heap.insert(consElement);
+                stackTypes[stackPointer] = StackType.H;
             }
             else if(instruction instanceof Instr.Add){
                 executeBinOp(BinaryOperator.PLUS);

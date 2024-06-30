@@ -275,7 +275,7 @@ public class Parser {
 
     private Expr factor(){
 
-        Expr expr = unary();
+        Expr expr = cons();
 
         while(checkTypes(TokenType.STAR, TokenType.SLASH)){
 
@@ -289,8 +289,20 @@ public class Parser {
             else if(match(TokenType.PERCENT)){
                 operator = BinaryOperator.MOD;
             }
-            Expr rightHandSide = unary();
+            Expr rightHandSide = cons();
             expr = new Expr.BinOp(expr, operator, rightHandSide);
+        }
+
+        return expr;
+    }
+
+    private Expr cons(){
+        Expr expr = unary();
+
+        while(match(TokenType.DOUBLE_COLON)){
+
+            Expr rightHandSide = unary();
+            expr = new Expr.Cons(expr, rightHandSide);
         }
 
         return expr;
@@ -339,6 +351,10 @@ public class Parser {
         }
         else if(match(TokenType.IDENTIFIER)){
             return new Expr.Variable(previous().lexeme);
+        }
+        else if(match(TokenType.LEFT_BRACKET)){
+            consume(TokenType.RIGHT_BRACKET, "[ needs ] to construct empty list");
+            return new Expr.Nil();
         }
         else if(match(TokenType.LEFT_PAREN)){
 

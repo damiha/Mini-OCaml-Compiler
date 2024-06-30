@@ -57,6 +57,14 @@ public class Lexer {
                 case '#':
                     addToken(TokenType.HASH);
                     break;
+                case ':':
+                    if(match(':')){
+                        addToken(TokenType.DOUBLE_COLON);
+                    }
+                    else{
+                        throw new RuntimeException(":: needs two :");
+                    }
+                    break;
                 case ')':
                     addToken(TokenType.RIGHT_PAREN);
                     break;

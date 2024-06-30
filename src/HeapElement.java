@@ -2,7 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class HeapElement {
+public abstract class HeapElement {
+
+    abstract String getOutputRepresentation();
 
     static class BasicValue extends HeapElement{
 
@@ -15,6 +17,11 @@ public class HeapElement {
         @Override
         public String toString(){
             return String.format("(B, %d)", value);
+        }
+
+        @Override
+        String getOutputRepresentation() {
+            return ("" + value);
         }
     }
 
@@ -37,6 +44,11 @@ public class HeapElement {
 
             return String.format("(V, [%s])", addressesAsString);
         }
+
+        @Override
+        String getOutputRepresentation() {
+            return toString();
+        }
     }
 
     static class Function extends HeapElement{
@@ -58,6 +70,11 @@ public class HeapElement {
                     appliedArgumentsVectorAddress,
                     globalVectorHeapAddress);
         }
+
+        @Override
+        String getOutputRepresentation() {
+            throw new RuntimeException("Function cannot be written to terminal");
+        }
     }
 
     // closure = code + global vector
@@ -78,6 +95,57 @@ public class HeapElement {
 
         public String toString(){
             return String.format("(C, cp: %s, gp: %d)", jumpLabelFunctionStart, globalVectorHeapAddress);
+        }
+
+        @Override
+        String getOutputRepresentation() {
+            throw new RuntimeException("Closure cannot be written to terminal");
+        }
+    }
+
+    static class FList extends HeapElement {
+
+        ListType listType;
+
+        int heapAddressHead;
+        int heapAddressListTail;
+
+        Heap heap;
+
+        public FList(){
+            listType = ListType.NIL;
+        }
+
+        // needs reference to the heap for output representation
+        public FList(int heapAddressHead, int heapAddressListTail, Heap heap){
+            listType = ListType.CONS;
+            this.heapAddressHead = heapAddressHead;
+            this.heapAddressListTail = heapAddressListTail;
+            this.heap = heap;
+        }
+
+        @Override
+        public String toString(){
+            if(listType == ListType.NIL){
+                return "(L, Nil)";
+            }
+            else{
+                return String.format("(L, Cons, h: %d, t: %d)", heapAddressHead, heapAddressListTail);
+            }
+        }
+
+        @Override
+        String getOutputRepresentation() {
+
+            if(listType == ListType.NIL){
+                return "[]";
+            }
+            else{
+                HeapElement head = heap.get(heapAddressHead);
+                HeapElement tail = heap.get(heapAddressListTail);
+
+                return head.getOutputRepresentation() + "::" + tail.getOutputRepresentation();
+            }
         }
     }
 }
